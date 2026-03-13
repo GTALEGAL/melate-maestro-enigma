@@ -2,43 +2,27 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Enigma 2.0 - Consola de Inteligencia</title>
+    <title>SISTEMA ENIGMA 2.0</title>
     <style>
-        body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; padding: 20px; }
-        .terminal { border: 2px solid #00ff41; padding: 20px; box-shadow: 0 0 15px #00ff41; min-height: 400px; }
-        .data-box { background: rgba(0, 50, 0, 0.3); border: 1px dashed #00ff41; padding: 15px; margin-top: 20px; }
-        .numero { display: inline-block; background: #00ff41; color: #000; padding: 5px 10px; margin: 5px; font-weight: bold; border-radius: 5px; }
-        h1 { text-shadow: 0 0 10px #00ff41; }
+        body { background-color: #000; color: #00ff00; font-family: 'Courier New', monospace; padding: 50px; }
+        .consola { border: 1px solid #00ff00; padding: 20px; box-shadow: 0 0 10px #00ff00; }
+        h1 { border-bottom: 2px solid #00ff00; padding-bottom: 10px; }
+        .dato { margin: 10px 0; font-size: 1.2em; }
     </style>
 </head>
 <body>
-    <div class="terminal">
-        <h1>SISTEMA ENIGMA 2.0</h1>
-        <p>> CONECTANDO CON EL CONDOMINIO B...</p>
-        <p>> ANALIZANDO CSV Y GATILLO 22...</p>
-        
-        <div id="resultado" class="data-box">
-            Cargando datos de resonancia...
-        </div>
+    <div class="consola">
+        <h1>CONDOMINIO B - ENIGMA 2.0</h1>
+        <p>> Cargando base de datos Melate...</p>
+        <p>> Analizando patrones del número 22...</p>
+        <div id="resultado" class="dato">> PROCESANDO...</div>
     </div>
 
     <script>
-        // Esta es la tubería que conecta la fachada con el motor
-        fetch('/api')
-            .then(response => response.json())
-            .then(data => {
-                const box = document.getElementById('resultado');
-                if(data.error) {
-                    box.innerHTML = "ERROR EN EL MOTOR: " + data.error;
-                } else {
-                    let html = `<p><strong>REPORTE:</strong> ${data.mensaje}</p>`;
-                    html += `<p><strong>SOCIOS DEL 22 EN MARZO:</strong></p>`;
-                    data.socios_frecuentes.forEach(n => {
-                        html += `<span class="numero">${n}</span>`;
-                    });
-                    box.innerHTML = html;
-                }
-            });
+        // Esto conectará con tu lógica de Python en el futuro
+        setTimeout(() => {
+            document.getElementById('resultado').innerHTML = "> SISTEMA LISTO PARA ÓRDENES DEL DIRECTOR.";
+        }, 2000);
     </script>
 </body>
 </html>
