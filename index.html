@@ -2,23 +2,28 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Enigma 2.0 - Melate Maestro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enigma 2.0 - Consola Maestra</title>
     <style>
-        body { background: #0a0a0a; color: #00ff00; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .console { border: 1px solid #00ff00; padding: 20px; width: 80%; max-width: 600px; box-shadow: 0 0 20px #00ff00; }
-        h1 { text-align: center; text-transform: uppercase; letter-spacing: 5px; }
-        .status { color: #fff; margin-bottom: 20px; }
-        .data { border-top: 1px solid #00ff00; padding-top: 10px; }
+        body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; margin: 0; padding: 20px; overflow: hidden; }
+        .terminal { border: 2px solid #00ff41; height: 90vh; padding: 20px; box-shadow: 0 0 15px #00ff41; background: rgba(0, 20, 0, 0.9); overflow-y: auto; }
+        .line { margin-bottom: 10px; border-left: 3px solid #00ff41; padding-left: 10px; animation: blink 1s infinite alternate; }
+        h1 { text-align: center; text-shadow: 0 0 10px #00ff41; letter-spacing: 10px; }
+        .stats { display: flex; justify-content: space-around; border-bottom: 1px solid #00ff41; padding-bottom: 10px; margin-bottom: 20px; font-size: 0.8em; }
+        @keyframes blink { from { opacity: 1; } to { opacity: 0.7; } }
     </style>
 </head>
 <body>
-    <div class="console">
-        <h1>Enigma 2.0</h1>
-        <div class="status">SISTEMA: ONLINE | PISOS: 56 ACTIVOS</div>
-        <div class="data">
-            <p>> Escaneando Marea de Marzo...</p>
-            <p>> Gatillo 22 detectado: RESONANCIA ALTA</p>
-            <p>> Esperando nuevo prompt de comando...</p>
+    <div class="terminal">
+        <h1>ENIGMA 2.0</h1>
+        <div class="stats">
+            <span>PISOS: 56</span> | <span>INGENIEROS: 11,200</span> | <span>ESTADO: VIVO</span>
+        </div>
+        <div id="output">
+            <div class="line">> Cargando archivo Melate (1).csv... OK</div>
+            <div class="line">> Sincronizando con Marea de Marzo... OK</div>
+            <div class="line">> Escaneando Gatillo 22... RESONANCIA DETECTADA</div>
+            <div class="line">> Sistema listo. Esperando prompt del Director...</div>
         </div>
     </div>
 </body>
