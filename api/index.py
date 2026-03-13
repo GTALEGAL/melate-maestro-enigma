@@ -7,63 +7,69 @@ import numpy as np
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
-            # 1. RUTA CRÍTICA: Vercel a veces requiere rutas absolutas
-# Dentro de tu index.py, usa esta lógica para el path
-base_dir = os.path.dirname(os.path.abspath(__file__))
-# Si el csv está en la raíz y el script en /api:
-path_csv = os.path.join(base_dir, '..', 'datos.csv') 
+            # 1. RASTREO DINÁMICO DEL CSV
+            # Buscamos en raíz, en api/ y en el directorio del script
+            posibles_rutas = [
+                os.path.join(os.getcwd(), 'datos.csv'),
+                os.path.join(os.path.dirname(__file__), 'datos.csv'),
+                os.path.join(os.path.dirname(os.path.dirname(__file__)), 'datos.csv'),
+                'datos.csv'
+            ]
+            
+            path_csv = None
+            for ruta in posibles_rutas:
+                if os.path.exists(ruta):
+                    path_csv = ruta
+                    break
+            
+            if not path_csv:
+                # Si no lo encuentra, nos dirá dónde buscó (esto aparecerá en tu pantalla)
+                raise FileNotFoundError(f"CSV no hallado. Busqué en: {posibles_rutas}")
 
-if not os.path.exists(path_csv):
-    # Intento 2: si está en la misma carpeta
-    path_csv = os.path.join(base_dir, 'datos.csv')
-
-            # 2. LECTURA DE DATOS
-            if not os.path.exists(path_csv):
-                raise FileNotFoundError(f"No se encontró datos.csv en {path_csv}")
-
+            # 2. PROCESAMIENTO
             df = pd.read_csv(path_csv)
+            # Limpieza rápida por si hay espacios en los nombres de columnas
+            df.columns = df.columns.str.strip()
             cols = ['R1','R2','R3','R4','R5','R6','R7']
             
-            # Tomar el último sorteo
             ultimo = df.iloc[0]
             numeros_base = [int(x) for x in ultimo[cols].values]
 
-            # 3. ANÁLISIS DE RESONANCIA
+            # 3. RESONANCIA
             df_marea = df.head(300)
-            socios_lista = []
+            socios = []
             for n in numeros_base:
                 mask = df_marea[cols].apply(lambda x: n in x.values, axis=1)
                 matches = df_marea[mask][cols].values.flatten()
-                socios_lista.extend([int(v) for v in matches if v != n])
+                socios.extend([int(v) for v in matches if v != n])
 
-            counts = pd.Series(socios_lista).value_counts()
-            prediccion = counts.head(7).index.tolist()
-            prediccion.sort()
+            counts = pd.Series(socios).value_counts()
+            prediccion = sorted(counts.head(7).index.tolist())
 
-            # 4. RESPUESTA EXITOSA
+            # 4. ENVÍO DE TELEMETRÍA
             res = {
                 "status": "OPERATIVO",
                 "concurso": int(ultimo['CONCURSO']),
-                "fecha": str(ultimo['FECHA']),
                 "ultimo_sorteo": numeros_base,
                 "prediccion": prediccion,
                 "metricas": {
-                    "paridad": f"{sum(1 for n in prediccion if n % 2 == 0)}P / {sum(1 for n in prediccion if n % 2 != 0)}N",
-                    "promedio": round(float(np.mean(prediccion)), 1),
+                    "paridad": f"{sum(1 for n in prediccion if n % 2 == 0)}P/{sum(1 for n in prediccion if n % 2 != 0)}N",
                     "suma": sum(prediccion)
                 }
             }
-
             self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(json.dumps(res).encode())
 
         except Exception as e:
-            # Si algo falla, enviamos el error en formato JSON para que el JS no se rompa
-            self.send_response(500)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            error_res = {"status": "ERROR", "error": str(e)}
-            self.wfile.write(json.dumps(error_res).encode())
+            # ESTO ES LO MÁS IMPORTANTE: Envía el error real al navegador
+            res = {
+                "status": "ERROR_CRÍTICO",
+                "mensaje": str(e),
+                "directorio_actual": os.getcwd(),
+                "archivos_visibles": os.listdir(os.getcwd())
+            }
+            self.send_response(200) # Enviamos 200 para que el HTML pueda leer el error
+
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(json.dumps(res).encode())
