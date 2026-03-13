@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CONDOMINIO B - ENIGMA 2.0</title>
+    <title>NASA ENIGMA - CONDOMINIO B</title>
     <style>
         :root {
+            --nasa-blue: #0b3d91;
             --neon-green: #00ff41;
-            --dark-green: #003b00;
+            --terminal-bg: rgba(0, 15, 0, 0.95);
         }
 
         body {
@@ -20,60 +21,64 @@
             height: 100vh;
             margin: 0;
             overflow: hidden;
-            text-transform: uppercase;
         }
 
-        /* Efecto CRT Scanlines */
+        /* Efecto de Interferencia y Monitor CRT */
         body::before {
             content: " ";
             display: block;
             position: absolute;
             top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
             z-index: 10;
-            background-size: 100% 2px, 3px 100%;
+            background-size: 100% 3px, 3px 100%;
             pointer-events: none;
         }
 
         .terminal {
-            width: 90%;
-            max-width: 850px;
-            height: 85vh;
-            border: 3px solid var(--neon-green);
-            padding: 30px;
-            box-shadow: 0 0 20px var(--dark-green), inset 0 0 10px var(--dark-green);
+            width: 95%;
+            max-width: 900px;
+            height: 90vh;
+            border: 2px solid var(--neon-green);
+            padding: 25px;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.2);
             position: relative;
-            background: rgba(0, 20, 0, 0.9);
+            background: var(--terminal-bg);
             display: flex;
             flex-direction: column;
             cursor: text;
         }
 
         .header {
-            border-bottom: 2px solid var(--neon-green);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            font-size: 1.5em;
-            text-shadow: 0 0 10px var(--neon-green);
+            border-bottom: 1px solid var(--neon-green);
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            display: flex;
+            justify-content: space-between;
+            text-shadow: 0 0 5px var(--neon-green);
         }
 
         #output {
             flex-grow: 1;
             overflow-y: auto;
-            margin-bottom: 20px;
-            line-height: 1.4em;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            line-height: 1.5em;
         }
 
         .input-area {
             display: flex;
             align-items: center;
-            font-size: 1.2em;
+            border-top: 1px solid var(--neon-green);
+            padding-top: 15px;
         }
 
         .prompt {
+            color: #fff;
             margin-right: 10px;
-            text-shadow: 0 0 5px var(--neon-green);
+            font-weight: bold;
         }
 
         input {
@@ -81,62 +86,59 @@
             border: none;
             color: var(--neon-green);
             font-family: inherit;
-            font-size: inherit;
+            font-size: 1.2em;
             outline: none;
             width: 100%;
-            text-shadow: 0 0 5px var(--neon-green);
-            caret-color: transparent;
+            caret-color: var(--neon-green);
         }
 
-        .stats-box {
-            border: 1px dashed var(--neon-green);
+        /* Bloque de Datos Estilo NASA */
+        .nasa-stats {
+            border-left: 4px solid var(--neon-green);
+            background: rgba(0, 255, 65, 0.05);
             padding: 15px;
             margin: 15px 0;
+            animation: glitch 0.3s ease;
+        }
+
+        .vector-result {
+            font-size: 1.5em;
             color: #fff;
-            background: rgba(0, 255, 65, 0.1);
-            animation: fadeIn 0.5s;
+            letter-spacing: 5px;
+            margin: 10px 0;
+            display: block;
+            text-align: center;
+            text-shadow: 0 0 10px #fff;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        @keyframes glitch {
+            0% { transform: translate(2px, 0); }
+            50% { transform: translate(-2px, 0); }
+            100% { transform: translate(0); }
         }
 
-        .cursor {
-            display: inline-block;
-            width: 10px;
-            height: 20px;
-            background: var(--neon-green);
-            animation: blink 0.8s infinite;
-            vertical-align: middle;
-        }
-
-        @keyframes blink {
-            0% { opacity: 1; }
-            50% { opacity: 0; }
-            100% { opacity: 1; }
-        }
-
-        #output::-webkit-scrollbar { width: 5px; }
+        #output::-webkit-scrollbar { width: 4px; }
         #output::-webkit-scrollbar-thumb { background: var(--neon-green); }
     </style>
 </head>
 <body>
 
 <div class="terminal">
-    <div class="header">CONDOMINIO B - ENIGMA 2.0 // TERMINAL DE DIRECTOR</div>
+    <div class="header">
+        <span>STATION: CONDOMINIO-B // MISSION: ENIGMA-2.0</span>
+        <span id="clock">00:00:00</span>
+    </div>
     
     <div id="output">
-        <div>> INICIALIZANDO NÚCLEO... OK</div>
-        <div>> CONEXIÓN CON DATOS.CSV... ESTABLECIDA</div>
-        <div>> PROTOCOLO DE RESONANCIA DE MARZO: ACTIVO</div>
-        <div style="color: #888; margin-top: 10px;">[ ESCRIBE UN NÚMERO Y PULSA ENTER PARA ANALIZAR SUS 7 SOCIOS ]</div>
+        <div>> INITIALIZING NASA PREDICTIVE ENGINE... [OK]</div>
+        <div>> DATABASE: DATOS.CSV CONNECTED.</div>
+        <div>> MULTIVARIATE ANALYSIS MODE: ACTIVE.</div>
+        <div style="color: #888; margin-top: 10px;">[ INGRESE GATILLO NUMÉRICO PARA CÁLCULO DE TRAYECTORIA ]</div>
     </div>
 
     <div class="input-area">
-        <span class="prompt">ORDEN_DIRECTOR_></span>
+        <span class="prompt">DIRECTOR_CMD></span>
         <input type="number" id="cmdInput" autofocus autocomplete="off">
-        <div class="cursor"></div>
     </div>
 </div>
 
@@ -144,51 +146,3 @@
     const input = document.getElementById('cmdInput');
     const output = document.getElementById('output');
     const terminal = document.querySelector('.terminal');
-
-    // Mantiene el foco en el input siempre que se haga clic en la terminal
-    terminal.addEventListener('click', () => {
-        input.focus();
-    });
-
-    input.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter' && this.value !== '') {
-            const val = this.value;
-            printToConsole(`<span style="color: #888">> SOLICITANDO ANÁLISIS DE RESONANCIA PARA EL GATILLO: ${val}</span>`);
-            
-            // Llamada a la API de Python
-            fetch(`/api?gatillo=${val}`)
-                .then(response => response.json())
-                .then(data => {
-                    const socios = data.socios_frecuentes.join(" - ");
-                    printToConsole(`
-                        <div class="stats-box">
-                            [ REPORTE ENIGMA - ESCANEO DE 7 PUNTOS ]<br>
-                            GATILLO DETECTADO: ${data.gatillo}<br>
-                            SOCIOS FRECUENTES: <span style="color:#0f0">${socios}</span><br>
-                            MENSAJE: ${data.mensaje}<br>
-                            ESTADO: LISTO PARA JUGADA MAESTRA
-                        </div>
-                    `);
-                })
-                .catch(err => {
-                    printToConsole(`<span style="color:red">> ERROR CRÍTICO: CEREBRO FUERA DE LÍNEA. VERIFICA REQUERIMIENTOS.</span>`);
-                });
-            
-            this.value = '';
-        }
-    });
-
-    function printToConsole(text) {
-        const div = document.createElement('div');
-        div.innerHTML = text;
-        output.appendChild(div);
-        // Auto-scroll hacia abajo
-        output.scrollTop = output.scrollHeight;
-    }
-
-    // Foco automático al cargar
-    window.onload = () => input.focus();
-</script>
-
-</body>
-</html>
