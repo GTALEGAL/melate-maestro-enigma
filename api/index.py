@@ -7,72 +7,64 @@ import numpy as np
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
-            # 1. LOCALIZACIÓN DE DATOS
-            # Usamos una ruta robusta para evitar errores de 'File Not Found'
+            # 1. LOCALIZACIÓN ROBUSTA DEL CSV
+            # Buscamos en el directorio actual (raíz del proyecto en Vercel)
             path_csv = os.path.join(os.getcwd(), 'datos.csv')
             
             if not os.path.exists(path_csv):
-                raise FileNotFoundError("El archivo datos.csv no se encuentra en el directorio.")
+                # Si falla, intentamos buscarlo un nivel arriba (común en despliegues API)
+                path_csv = os.path.join(os.getcwd(), '..', 'datos.csv')
 
             df = pd.read_csv(path_csv)
             cols = ['R1','R2','R3','R4','R5','R6','R7']
             
-            # 2. DETECCIÓN DEL ÚLTIMO EVENTO (Renglón 0)
-            ultimo_registro = df.iloc[0]
-            numeros_base = [int(x) for x in ultimo_registro[cols].values]
-            concurso_id = int(ultimo_registro['CONCURSO'])
-            fecha_evento = str(ultimo_registro['FECHA'])
+            # 2. IDENTIFICACIÓN DEL ÚLTIMO SORTEO
+            # Tomamos la primera fila (la más reciente según tu archivo)
+            ultimo = df.iloc[0]
+            concurso = int(ultimo['CONCURSO'])
+            fecha = str(ultimo['FECHA'])
+            numeros_base = [int(x) for x in ultimo[cols].values]
 
-            # 3. ANÁLISIS DE RESONANCIA DE CONJUNTO
-            # Buscamos qué números aparecen con más frecuencia cuando 
-            # cualquiera de los números del último sorteo está presente.
-            socios_acumulados = []
-            
-            # Analizamos los últimos 500 sorteos para mayor precisión (marea estadística)
-            df_reciente = df.head(500) 
-            
+            # 3. ANÁLISIS DE SOCIOS (RESONANCIA)
+            # Analizamos los últimos 300 registros para encontrar patrones de compañía
+            df_analisis = df.head(300)
+            socios_totales = []
+
             for n in numeros_base:
-                # Máscara: filas donde aparece el número 'n'
-                mask = df_reciente[cols].apply(lambda x: n in x.values, axis=1)
-                matches = df_reciente[mask][cols].values.flatten()
-                # Guardamos los compañeros, excluyendo al propio número 'n'
-                socios_acumulados.extend([int(v) for v in matches if v != n])
+                # Filtrar filas donde aparece este número del último sorteo
+                mask = df_analisis[cols].apply(lambda x: n in x.values, axis=1)
+                matches = df_analisis[mask][cols].values.flatten()
+                # Extraemos los números que lo acompañaron (excluyendo al original)
+                socios_totales.extend([int(v) for v in matches if v != n])
 
-            # 4. GENERACIÓN DEL VECTOR PREDICTIVO
-            # Obtenemos los 7 números con mayor frecuencia de aparición conjunta
-            counts = pd.Series(socios_acumulados).value_counts()
+            # 4. GENERACIÓN DEL VECTOR PREDICTIVO (TOP 7)
+            counts = pd.Series(socios_totales).value_counts()
             prediccion = counts.head(7).index.tolist()
-            prediccion.sort() # Ordenar de menor a mayor para el Dashboard
+            prediccion.sort()
 
-            # 5. CÁLCULO DE MÉTRICAS OPERATIVAS
+            # 5. MÉTRICAS DASHBOARD
             suma_v = sum(prediccion)
             pares = sum(1 for n in prediccion if n % 2 == 0)
-            nones = 7 - pares
 
             res = {
                 "status": "OPERATIVO",
-                "concurso": concurso_id,
-                "fecha": fecha_evento,
+                "concurso": concurso,
+                "fecha": fecha,
                 "ultimo_sorteo": numeros_base,
                 "prediccion": prediccion,
                 "metricas": {
-                    "paridad": f"{pares}P / {nones}N",
+                    "paridad": f"{pares}P / {7-pares}N",
                     "promedio": round(float(np.mean(prediccion)), 1),
                     "suma": suma_v
                 }
             }
 
         except Exception as e:
-            res = {
-                "status": "ERROR",
-                "error": str(e),
-                "mensaje": "Revisar estructura de datos.csv o ruta de archivo"
-            }
+            res = {"status": "ERROR", "error": str(e)}
 
-        # 6. RESPUESTA AL DASHBOARD
+        # SALIDA JSON
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
-        # Habilitar CORS por si pruebas localmente
-        self.send_header('Access-Control-Allow-Origin', '*') 
+        self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         self.wfile.write(json.dumps(res).encode())
