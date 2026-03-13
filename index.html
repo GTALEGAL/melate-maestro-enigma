@@ -3,138 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CONDOMINIO B - DASHBOARD PREDICTIVO</title>
+    <title>CONDOMINIO B - DASHBOARD</title>
     <style>
         :root {
-            --nasa-blue: #0b3d91;
             --neon-green: #00ff41;
-            --terminal-bg: #050505;
             --gold: #ffcc00;
+            --bg-dark: #050505;
         }
 
         body {
             background-color: #000;
             color: var(--neon-green);
             font-family: 'Courier New', Courier, monospace;
-            margin: 0;
             display: flex;
             justify-content: center;
             padding: 20px;
+            margin: 0;
         }
 
-        .dashboard-container {
+        .container {
             width: 100%;
-            max-width: 800px;
+            max-width: 700px;
             border: 2px solid var(--neon-green);
-            background: var(--terminal-bg);
-            padding: 20px;
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+            padding: 25px;
+            background: var(--bg-dark);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
         }
 
-        h1 { text-align: center; border-bottom: 1px solid var(--neon-green); padding-bottom: 10px; font-size: 1.2rem; }
+        h1 { text-align: center; font-size: 1.4rem; border-bottom: 1px solid var(--neon-green); padding-bottom: 10px; }
 
-        .section { margin-bottom: 30px; padding: 15px; border: 1px dashed rgba(0, 255, 65, 0.3); }
-        .section-title { font-weight: bold; margin-bottom: 10px; color: #fff; }
+        .panel { margin-top: 20px; border: 1px dashed rgba(0, 255, 65, 0.4); padding: 15px; }
+        .panel-header { font-weight: bold; margin-bottom: 15px; color: #fff; text-transform: uppercase; }
 
-        .ball-container { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
+        .ball-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 15px 0; }
         .ball {
-            width: 40px; height: 40px; border: 1px solid var(--neon-green);
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 50%; font-weight: bold;
+            width: 45px; height: 45px; border: 2px solid var(--neon-green);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 1.1rem;
         }
-        .ball.predictiva { background: var(--neon-green); color: #000; box-shadow: 0 0 10px var(--neon-green); }
+        .ball.new { background: var(--neon-green); color: #000; box-shadow: 0 0 10px var(--neon-green); }
 
-        .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
-        .metric-card { background: rgba(255, 255, 255, 0.05); padding: 10px; text-align: center; font-size: 0.8rem; }
-        .metric-val { display: block; font-size: 1.2rem; color: #fff; margin-top: 5px; }
+        .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
+        .metric-box { background: rgba(255,255,255,0.05); padding: 10px; text-align: center; }
+        .metric-label { font-size: 0.7rem; display: block; opacity: 0.8; }
+        .metric-value { font-size: 1.2rem; font-weight: bold; color: #fff; }
 
-        .alerta-dorada {
-            margin-top: 15px; padding: 10px; text-align: center; font-weight: bold;
-            border: 2px solid #333; color: #333;
+        .alert-zone {
+            margin-top: 20px; padding: 15px; text-align: center; font-weight: bold;
+            border: 2px solid #222; color: #222; transition: 0.5s;
         }
-        .alerta-dorada.active {
+        .alert-zone.active {
             border-color: var(--gold); color: var(--gold);
-            animation: blink 1s infinite;
+            text-shadow: 0 0 5px var(--gold);
+            animation: pulse 1.5s infinite;
         }
 
-        @keyframes blink { 50% { opacity: 0.5; } }
-        
-        .loading { text-align: center; padding: 20px; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .status-bar { font-size: 0.8rem; margin-top: 15px; color: #666; }
     </style>
 </head>
 <body>
 
-<div class="dashboard-container">
-    <h1>🛰️ TERMINAL DE ANÁLISIS PREDICTIVO - ENIGMA 2.0</h1>
+<div class="container">
+    <h1>🛰️ SISTEMA PREDICTIVO CONDOMINIO B</h1>
 
-    <div id="loader" class="loading">SINCRONIZANDO CON BASE DE DATOS...</div>
+    <div class="panel">
+        <div class="panel-header">📡 Último Sorteo (Concurso <span id="id_concurso">...</span>)</div>
+        <div id="row_ultimo" class="ball-row"></div>
+        <div class="status-bar">REGISTRO: <span id="fecha_ultimo">...</span></div>
+    </div>
 
-    <div id="content" style="display:none;">
-        <div class="section">
-            <div class="section-title">📡 ÚLTIMO SORTEO DETECTADO (CONCURSO <span id="concurso">0</span>)</div>
-            <div id="balls-ultimo" class="ball-container"></div>
-            <small>FECHA DE REGISTRO: <span id="fecha">--/--/--</span></small>
+    <div class="panel" style="border-color: var(--gold);">
+        <div class="panel-header" style="color: var(--gold);">🎯 Vector de Resonancia Sugerido</div>
+        <div id="row_prediccion" class="ball-row"></div>
+        
+        <div class="metrics">
+            <div class="metric-box"><span class="metric-label">PARIDAD</span><span id="m_par" class="metric-value">--</span></div>
+            <div class="metric-box"><span class="metric-label">MEDIA</span><span id="m_prom" class="metric-value">--</span></div>
+            <div class="metric-box"><span class="metric-label">SUMA TOTAL</span><span id="m_suma" class="metric-value">--</span></div>
         </div>
 
-        <div class="section" style="border-color: var(--gold);">
-            <div class="section-title" style="color: var(--gold);">🎯 VECTOR DE RESONANCIA SUGERIDO</div>
-            <div id="balls-prediccion" class="ball-container"></div>
-            
-            <div class="metrics-grid">
-                <div class="metric-card">PARIDAD<span id="m-par" class="metric-val">--</span></div>
-                <div class="metric-card">MEDIA<span id="m-prom" class="metric-val">--</span></div>
-                <div class="metric-card">SUMA<span id="m-suma" class="metric-val">--</span></div>
-            </div>
+        <div id="alerta_dorada" class="alert-zone">ALERTA DORADA STANDBY</div>
+    </div>
 
-            <div id="alerta-box" class="alerta-dorada">ALERTA DORADA INACTIVA</div>
-        </div>
+    <div class="status-bar" style="text-align: center; margin-top: 20px;">
+        ESTADO: <span style="color:var(--neon-green)">OPERATIVO // SINCRONIZADO</span>
     </div>
 </div>
 
 <script>
-    window.onload = async () => {
+    async function syncSystem() {
         try {
-            // Llamada al backend (tu nuevo index.py)
-            const response = await fetch('/api/index');
-            const data = await response.json();
+            const res = await fetch('/api/index');
+            const data = await res.json();
 
-            if (data.error) throw new Error(data.error);
+            if(data.error) throw new Error(data.error);
 
-            // Llenar datos del sorteo anterior
-            document.getElementById('concurso').innerText = data.concurso;
-            document.getElementById('fecha').innerText = data.fecha;
-            renderBalls('balls-ultimo', data.ultimo_sorteo, false);
+            // Cargar datos del último sorteo
+            document.getElementById('id_concurso').innerText = data.concurso;
+            document.getElementById('fecha_ultimo').innerText = data.fecha;
+            renderBalls('row_ultimo', data.ultimo_sorteo, false);
 
-            // Llenar predicción
-            renderBalls('balls-prediccion', data.prediccion, true);
+            // Cargar predicción
+            renderBalls('row_prediccion', data.prediccion, true);
 
-            // Llenar métricas
-            document.getElementById('m-par').innerText = data.metricas.paridad;
-            document.getElementById('m-prom').innerText = data.metricas.promedio;
-            document.getElementById('m-suma').innerText = data.metricas.suma;
+            // Cargar métricas
+            document.getElementById('m_par').innerText = data.metricas.paridad;
+            document.getElementById('m_prom').innerText = data.metricas.promedio;
+            const suma = data.metricas.suma;
+            document.getElementById('m_suma').innerText = suma;
 
-            // Lógica Alerta Dorada (basada en suma histórica ideal 130-210)
-            const alerta = document.getElementById('alerta-box');
-            if (data.metricas.suma >= 130 && data.metricas.suma <= 210) {
+            // Lógica Alerta Dorada
+            if(suma >= 130 && suma <= 210) {
+                const alerta = document.getElementById('alerta_dorada');
                 alerta.innerText = "⚠️ ALERTA DORADA: RESONANCIA ÓPTIMA";
                 alerta.classList.add('active');
             }
 
-            // Mostrar contenido
-            document.getElementById('loader').style.display = 'none';
-            document.getElementById('content').style.display = 'block';
-
         } catch (err) {
-            document.getElementById('loader').innerHTML = `<span style="color:red">ERROR DE ENLACE: ${err.message}</span>`;
+            console.error("Error de enlace:", err);
+            document.body.innerHTML = `<div style="color:red; text-align:center; padding:50px;">
+                FALLO DE TELEMETRÍA: ${err.message}<br>Revisa que index.py y datos.csv estén correctos.
+            </div>`;
         }
-    };
+    }
 
-    function renderBalls(containerId, numbers, isPredictive) {
-        const container = document.getElementById(containerId);
-        container.innerHTML = numbers.map(n => `
-            <div class="ball ${isPredictive ? 'predictiva' : ''}">${n}</div>
+    function renderBalls(id, nums, isHot) {
+        const container = document.getElementById(id);
+        container.innerHTML = nums.map(n => `
+            <div class="ball ${isHot ? 'new' : ''}">${n}</div>
         `).join('');
     }
+
+    window.onload = syncSystem;
 </script>
 
 </body>
