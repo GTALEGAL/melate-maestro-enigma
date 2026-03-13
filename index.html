@@ -75,16 +75,22 @@
             text-shadow: 0 0 5px var(--neon-green);
         }
 
-        input {
-            background: transparent;
-            border: none;
-            color: var(--neon-green);
-            font-family: inherit;
-            font-size: inherit;
-            outline: none;
-            width: 100%;
-            text-shadow: 0 0 5px var(--neon-green);
-        }
+input {
+    background: transparent;
+    border: none;
+    color: var(--neon-green);
+    font-family: inherit;
+    font-size: inherit;
+    outline: none;
+    width: 100%;
+    text-shadow: 0 0 5px var(--neon-green);
+    caret-color: transparent; /* Escondemos el cursor nativo de Windows */
+}
+
+/* Añadimos esto para que toda la terminal sea "clicable" */
+.terminal {
+    cursor: text;
+}
 
         .stats-box {
             border: 1px dashed var(--neon-green);
@@ -133,43 +139,50 @@
     </div>
 </div>
 
-<script>
-    const input = document.getElementById('cmdInput');
-    const output = document.getElementById('output');
+const input = document.getElementById('cmdInput');
+const output = document.getElementById('output');
+const terminal = document.querySelector('.terminal');
 
-    input.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter' && this.value !== '') {
-            const val = this.value;
-            printToConsole(`> EJECUTANDO ANÁLISIS PARA EL GATILLO: ${val}...`);
-            
-            // Llamada a tu API de Python
-            fetch(`/api?gatillo=${val}`)
-                .then(response => response.json())
-                .then(data => {
-                    const socios = data.socios_frecuentes.join(" - ");
-                    printToConsole(`
-                        <div class="stats-box">
-                            RESULTADO ENIGMA:<br>
-                            SOCIOS DETECTADOS: [ ${socios} ]<br>
-                            ESTADO: ÉXITO TOTAL
-                        </div>
-                    `);
-                })
-                .catch(err => {
-                    printToConsole(`<span style="color:red">> ERROR: NO SE PUDO CONTACTAR AL CEREBRO DE PYTHON.</span>`);
-                });
-            
-            this.value = '';
-        }
-    });
+// ORDEN: Si el Director hace clic en cualquier parte de la terminal, activa el teclado
+terminal.addEventListener('click', () => {
+    input.focus();
+});
 
-    function printToConsole(text) {
-        const div = document.createElement('div');
-        div.innerHTML = text;
-        output.appendChild(div);
-        output.scrollTop = output.scrollHeight;
+input.addEventListener('keypress', function (e) {
+    if (e.key === 'Enter' && this.value !== '') {
+        const val = this.value;
+        printToConsole(`<span style="color: #888">> SOLICITANDO ANÁLISIS PARA: ${val}</span>`);
+        
+        fetch(`/api?gatillo=${val}`)
+            .then(response => response.json())
+            .then(data => {
+                const socios = data.socios_frecuentes.join(" - ");
+                printToConsole(`
+                    <div class="stats-box">
+                        [ REPORTE ENIGMA ]<br>
+                        GATILLO: ${data.gatillo}<br>
+                        SOCIOS FRECUENTES: ${socios}<br>
+                        ESTADO: TRANSMISIÓN COMPLETA
+                    </div>
+                `);
+            })
+            .catch(err => {
+                printToConsole(`<span style="color:red">> ERROR: CEREBRO FUERA DE LÍNEA.</span>`);
+            });
+        
+        this.value = '';
     }
-</script>
+});
+
+function printToConsole(text) {
+    const div = document.createElement('div');
+    div.innerHTML = text;
+    output.appendChild(div);
+    output.scrollTop = output.scrollHeight;
+}
+
+// Foco inicial automático
+window.onload = () => input.focus();
 
 </body>
 </html>
