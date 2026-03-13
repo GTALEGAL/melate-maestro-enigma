@@ -2,27 +2,174 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>SISTEMA ENIGMA 2.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONDOMINIO B - ENIGMA 2.0</title>
     <style>
-        body { background-color: #000; color: #00ff00; font-family: 'Courier New', monospace; padding: 50px; }
-        .consola { border: 1px solid #00ff00; padding: 20px; box-shadow: 0 0 10px #00ff00; }
-        h1 { border-bottom: 2px solid #00ff00; padding-bottom: 10px; }
-        .dato { margin: 10px 0; font-size: 1.2em; }
+        :root {
+            --neon-green: #00ff41;
+            --dark-green: #003b00;
+        }
+
+        body {
+            background-color: #000;
+            color: var(--neon-green);
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            text-transform: uppercase;
+        }
+
+        /* Efecto de monitor antiguo (Scanlines) */
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 10;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .terminal {
+            width: 90%;
+            max-width: 850px;
+            height: 80vh;
+            border: 3px solid var(--neon-green);
+            padding: 30px;
+            box-shadow: 0 0 20px var(--dark-green), inset 0 0 10px var(--dark-green);
+            position: relative;
+            background: rgba(0, 20, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--neon-green);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            text-shadow: 0 0 10px var(--neon-green);
+        }
+
+        #output {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            line-height: 1.4em;
+        }
+
+        .input-area {
+            display: flex;
+            align-items: center;
+            font-size: 1.2em;
+        }
+
+        .prompt {
+            margin-right: 10px;
+            text-shadow: 0 0 5px var(--neon-green);
+        }
+
+        input {
+            background: transparent;
+            border: none;
+            color: var(--neon-green);
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+            width: 100%;
+            text-shadow: 0 0 5px var(--neon-green);
+        }
+
+        .stats-box {
+            border: 1px dashed var(--neon-green);
+            padding: 10px;
+            margin: 10px 0;
+            color: #fff;
+            background: rgba(0, 255, 65, 0.1);
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 20px;
+            background: var(--neon-green);
+            animation: blink 0.8s infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        /* Personalización del scroll */
+        #output::-webkit-scrollbar { width: 5px; }
+        #output::-webkit-scrollbar-thumb { background: var(--neon-green); }
     </style>
 </head>
 <body>
-    <div class="consola">
-        <h1>CONDOMINIO B - ENIGMA 2.0</h1>
-        <p>> Cargando base de datos Melate...</p>
-        <p>> Analizando patrones del número 22...</p>
-        <div id="resultado" class="dato">> PROCESANDO...</div>
+
+<div class="terminal">
+    <div class="header">CONDOMINIO B - ENIGMA 2.0 // TERMINAL DE DIRECTOR</div>
+    
+    <div id="output">
+        <div>> INICIALIZANDO NÚCLEO... OK</div>
+        <div>> CONEXIÓN CON DATOS.CSV... ESTABLECIDA</div>
+        <div>> PROTOCOLO DE RESONANCIA DE MARZO: ACTIVO</div>
+        <div style="color: #888; margin-top: 10px;">[ ESCRIBE UN NÚMERO PARA ANALIZAR SUS SOCIOS FRECUENTES ]</div>
     </div>
 
-    <script>
-        // Esto conectará con tu lógica de Python en el futuro
-        setTimeout(() => {
-            document.getElementById('resultado').innerHTML = "> SISTEMA LISTO PARA ÓRDENES DEL DIRECTOR.";
-        }, 2000);
-    </script>
+    <div class="input-area">
+        <span class="prompt">ORDEN_DIRECTOR_></span>
+        <input type="number" id="cmdInput" autofocus autocomplete="off">
+        <div class="cursor"></div>
+    </div>
+</div>
+
+<script>
+    const input = document.getElementById('cmdInput');
+    const output = document.getElementById('output');
+
+    input.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter' && this.value !== '') {
+            const val = this.value;
+            printToConsole(`> EJECUTANDO ANÁLISIS PARA EL GATILLO: ${val}...`);
+            
+            // Llamada a tu API de Python
+            fetch(`/api?gatillo=${val}`)
+                .then(response => response.json())
+                .then(data => {
+                    const socios = data.socios_frecuentes.join(" - ");
+                    printToConsole(`
+                        <div class="stats-box">
+                            RESULTADO ENIGMA:<br>
+                            SOCIOS DETECTADOS: [ ${socios} ]<br>
+                            ESTADO: ÉXITO TOTAL
+                        </div>
+                    `);
+                })
+                .catch(err => {
+                    printToConsole(`<span style="color:red">> ERROR: NO SE PUDO CONTACTAR AL CEREBRO DE PYTHON.</span>`);
+                });
+            
+            this.value = '';
+        }
+    });
+
+    function printToConsole(text) {
+        const div = document.createElement('div');
+        div.innerHTML = text;
+        output.appendChild(div);
+        output.scrollTop = output.scrollHeight;
+    }
+</script>
+
 </body>
 </html>
