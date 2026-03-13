@@ -4,7 +4,8 @@
     { "src": "index.html", "use": "@vercel/static" }
   ],
   "rewrites": [
-    { "source": "/api", "destination": "/api/index.py" },
+    { "source": "/api/index", "destination": "/api/index.py" },
+    { "source": "/api/(.*)", "destination": "/api/index.py" },
     { "source": "/", "destination": "/index.html" }
   ]
 }
