@@ -1,50 +1,141 @@
-<div id="dashboard">
-    <div class="card">
-        <h3>🛰️ ÚLTIMO SORTEO DETECTADO (CONCURSO <span id="id-concurso">...</span>)</h3>
-        <div id="numeros-ultimo" class="ball-container"></div>
-        <p>Fecha de registro: <span id="fecha-ultimo">...</span></p>
-    </div>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONDOMINIO B - DASHBOARD PREDICTIVO</title>
+    <style>
+        :root {
+            --nasa-blue: #0b3d91;
+            --neon-green: #00ff41;
+            --terminal-bg: #050505;
+            --gold: #ffcc00;
+        }
 
-    <div class="card highlight">
-        <h3>🎯 VECTOR PREDICTIVO SUGERIDO</h3>
-        <div id="vector-prediccion" class="ball-container large"></div>
-        <div class="grid-metrics">
-            <div class="metric"><span>PARIDAD:</span> <b id="m-par">...</b></div>
-            <div class="metric"><span>MEDIA:</span> <b id="m-prom">...</b></div>
-            <div class="metric"><span>SUMA:</span> <b id="m-suma">...</b></div>
-            <div id="alerta" class="metric-alert">ALERTA DORADA</div>
+        body {
+            background-color: #000;
+            color: var(--neon-green);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            max-width: 800px;
+            border: 2px solid var(--neon-green);
+            background: var(--terminal-bg);
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+        }
+
+        h1 { text-align: center; border-bottom: 1px solid var(--neon-green); padding-bottom: 10px; font-size: 1.2rem; }
+
+        .section { margin-bottom: 30px; padding: 15px; border: 1px dashed rgba(0, 255, 65, 0.3); }
+        .section-title { font-weight: bold; margin-bottom: 10px; color: #fff; }
+
+        .ball-container { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
+        .ball {
+            width: 40px; height: 40px; border: 1px solid var(--neon-green);
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; font-weight: bold;
+        }
+        .ball.predictiva { background: var(--neon-green); color: #000; box-shadow: 0 0 10px var(--neon-green); }
+
+        .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        .metric-card { background: rgba(255, 255, 255, 0.05); padding: 10px; text-align: center; font-size: 0.8rem; }
+        .metric-val { display: block; font-size: 1.2rem; color: #fff; margin-top: 5px; }
+
+        .alerta-dorada {
+            margin-top: 15px; padding: 10px; text-align: center; font-weight: bold;
+            border: 2px solid #333; color: #333;
+        }
+        .alerta-dorada.active {
+            border-color: var(--gold); color: var(--gold);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink { 50% { opacity: 0.5; } }
+        
+        .loading { text-align: center; padding: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <h1>🛰️ TERMINAL DE ANÁLISIS PREDICTIVO - ENIGMA 2.0</h1>
+
+    <div id="loader" class="loading">SINCRONIZANDO CON BASE DE DATOS...</div>
+
+    <div id="content" style="display:none;">
+        <div class="section">
+            <div class="section-title">📡 ÚLTIMO SORTEO DETECTADO (CONCURSO <span id="concurso">0</span>)</div>
+            <div id="balls-ultimo" class="ball-container"></div>
+            <small>FECHA DE REGISTRO: <span id="fecha">--/--/--</span></small>
+        </div>
+
+        <div class="section" style="border-color: var(--gold);">
+            <div class="section-title" style="color: var(--gold);">🎯 VECTOR DE RESONANCIA SUGERIDO</div>
+            <div id="balls-prediccion" class="ball-container"></div>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">PARIDAD<span id="m-par" class="metric-val">--</span></div>
+                <div class="metric-card">MEDIA<span id="m-prom" class="metric-val">--</span></div>
+                <div class="metric-card">SUMA<span id="m-suma" class="metric-val">--</span></div>
+            </div>
+
+            <div id="alerta-box" class="alerta-dorada">ALERTA DORADA INACTIVA</div>
         </div>
     </div>
 </div>
 
 <script>
-    // Al cargar la página, ejecuta el análisis automático
     window.onload = async () => {
-        const response = await fetch('/api/index');
-        const data = await response.json();
-        
-        // Actualizar UI
-        document.getElementById('id-concurso').innerText = data.ultimo_sorteo.concurso;
-        document.getElementById('fecha-ultimo').innerText = data.ultimo_sorteo.fecha;
-        
-        // Renderizar bolas del último sorteo
-        renderBalls('numeros-ultimo', data.ultimo_sorteo.numeros);
-        
-        // Renderizar predicción
-        renderBalls('vector-prediccion', data.prediccion, true);
-        
-        // Métricas
-        document.getElementById('m-par').innerText = data.metricas.paridad;
-        document.getElementById('m-prom').innerText = data.metricas.promedio;
-        document.getElementById('m-suma').innerText = data.metricas.suma_total;
-        
-        if(data.metricas.alerta_dorada === "ACTIVA") {
-            document.getElementById('alerta').classList.add('gold-on');
+        try {
+            // Llamada al backend (tu nuevo index.py)
+            const response = await fetch('/api/index');
+            const data = await response.json();
+
+            if (data.error) throw new Error(data.error);
+
+            // Llenar datos del sorteo anterior
+            document.getElementById('concurso').innerText = data.concurso;
+            document.getElementById('fecha').innerText = data.fecha;
+            renderBalls('balls-ultimo', data.ultimo_sorteo, false);
+
+            // Llenar predicción
+            renderBalls('balls-prediccion', data.prediccion, true);
+
+            // Llenar métricas
+            document.getElementById('m-par').innerText = data.metricas.paridad;
+            document.getElementById('m-prom').innerText = data.metricas.promedio;
+            document.getElementById('m-suma').innerText = data.metricas.suma;
+
+            // Lógica Alerta Dorada (basada en suma histórica ideal 130-210)
+            const alerta = document.getElementById('alerta-box');
+            if (data.metricas.suma >= 130 && data.metricas.suma <= 210) {
+                alerta.innerText = "⚠️ ALERTA DORADA: RESONANCIA ÓPTIMA";
+                alerta.classList.add('active');
+            }
+
+            // Mostrar contenido
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+
+        } catch (err) {
+            document.getElementById('loader').innerHTML = `<span style="color:red">ERROR DE ENLACE: ${err.message}</span>`;
         }
     };
 
-    function renderBalls(id, nums, highlight=false) {
-        const container = document.getElementById(id);
-        container.innerHTML = nums.map(n => `<div class="ball ${highlight ? 'hot' : ''}">${n}</div>`).join('');
+    function renderBalls(containerId, numbers, isPredictive) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = numbers.map(n => `
+            <div class="ball ${isPredictive ? 'predictiva' : ''}">${n}</div>
+        `).join('');
     }
 </script>
+
+</body>
+</html>
