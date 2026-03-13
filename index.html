@@ -136,13 +136,78 @@
         <div style="color: #888; margin-top: 10px;">[ INGRESE GATILLO NUMÉRICO PARA CÁLCULO DE TRAYECTORIA ]</div>
     </div>
 
-    <div class="input-area">
+    <form id="cmdForm" class="input-area">
         <span class="prompt">DIRECTOR_CMD></span>
         <input type="number" id="cmdInput" autofocus autocomplete="off">
-    </div>
+    </form>
 </div>
 
 <script>
     const input = document.getElementById('cmdInput');
     const output = document.getElementById('output');
+    const form = document.getElementById('cmdForm');
     const terminal = document.querySelector('.terminal');
+
+    // Reloj en tiempo real
+    setInterval(() => {
+        document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+    }, 1000);
+
+    // Foco automático agresivo
+    terminal.addEventListener('click', () => input.focus());
+    window.onload = () => input.focus();
+
+    // ESCUCHA DE ÓRDENES MEDIANTE FORMULARIO (MÁS FIABLE QUE EL KEYPRESS)
+    form.addEventListener('submit', function (e) {
+        e.preventDefault(); // Evita que la página se refresque
+        
+        const val = input.value;
+        if (val === '') return;
+
+        printToConsole(`<span style="color: #666">> COMANDO RECIBIDO: EJECUTANDO CÁLCULO PARA GATILLO ${val}...</span>`);
+        
+        fetch(`/api?gatillo=${val}`)
+            .then(r => {
+                if (!r.ok) throw new Error("SERVIDOR NO RESPONDE (404/500)");
+                return r.json();
+            })
+            .then(data => {
+                if(data.error) throw new Error(data.error);
+
+                const socios = data.socios_frecuentes ? data.socios_frecuentes.join(" - ") : "SIN DATOS";
+                const paridad = data.metricas ? data.metricas.balance_par : "?";
+                const promedio = data.metricas ? data.metricas.promedio : "?";
+                
+                printToConsole(`
+                    <div class="nasa-stats">
+                        [ REPORTE DE TRAYECTORIA PREDICTIVA ]<br>
+                        ------------------------------------------------<br>
+                        GATILLO ORIGEN: ${data.gatillo}<br>
+                        VECTOR DE RESONANCIA (7):<br>
+                        <span class="vector-result">${socios}</span><br>
+                        [ MÉTRICAS DE VALIDACIÓN ]<br>
+                        > BALANCE PARIDAD: ${paridad} / 7<br>
+                        > MEDIA DEL VECTOR: ${promedio}<br>
+                        > CONFIANZA: ${data.metricas ? data.metricas.confianza : "ESTÁNDAR"}<br>
+                        ------------------------------------------------<br>
+                        SISTEMA: ${data.mensaje}
+                    </div>
+                `);
+            })
+            .catch(err => {
+                printToConsole(`<span style="color:red">> ERROR DE NÚCLEO: ${err.message}</span>`);
+            });
+        
+        input.value = ''; // Limpia para la siguiente orden
+    });
+
+    function printToConsole(text) {
+        const div = document.createElement('div');
+        div.innerHTML = text;
+        output.appendChild(div);
+        output.scrollTop = output.scrollHeight;
+    }
+</script>
+
+</body>
+</html>
