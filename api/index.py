@@ -29,8 +29,11 @@ class handler(BaseHTTPRequestHandler):
                 "socios_frecuentes": frecuentes,
                 "mensaje": "Ingenieros del Condominio B reportando éxito."
             }
+        
         except Exception as e:
+            print(f"ERROR DETECTADO: {e}") # Esto hará que aparezca en el Log
             resultado = {"error": str(e)}
 
+        print(f"RESPUESTA ENVIADA: {resultado}") # Esto imprimirá los números en el Log
         self.wfile.write(json.dumps(resultado).encode())
         return
