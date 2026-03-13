@@ -8,13 +8,14 @@ class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
             # 1. RUTA CRÍTICA: Vercel a veces requiere rutas absolutas
-            # Buscamos el archivo en la raíz del proyecto
-            base_path = os.path.dirname(os.path.dirname(__file__))
-            path_csv = os.path.join(base_path, 'datos.csv')
-            
-            # Si no está en la raíz, buscamos en el directorio actual
-            if not os.path.exists(path_csv):
-                path_csv = os.path.join(os.getcwd(), 'datos.csv')
+# Dentro de tu index.py, usa esta lógica para el path
+base_dir = os.path.dirname(os.path.abspath(__file__))
+# Si el csv está en la raíz y el script en /api:
+path_csv = os.path.join(base_dir, '..', 'datos.csv') 
+
+if not os.path.exists(path_csv):
+    # Intento 2: si está en la misma carpeta
+    path_csv = os.path.join(base_dir, 'datos.csv')
 
             # 2. LECTURA DE DATOS
             if not os.path.exists(path_csv):
