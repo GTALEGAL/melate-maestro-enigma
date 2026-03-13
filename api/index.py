@@ -1,58 +1,54 @@
 from http.server import BaseHTTPRequestHandler
 import pandas as pd
 import json
-import urllib.parse
 import numpy as np
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
-        query = urllib.parse.urlparse(self.path).query
-        params = urllib.parse.parse_qs(query)
-        # Recibe el número que escribiste en la terminal (ej. 14)
-        gatillo = int(params.get('gatillo', [22])[0])
-
         try:
             df = pd.read_csv('datos.csv')
             cols = ['R1','R2','R3','R4','R5','R6','R7']
-
-            # FILTRO NASA: Buscamos resonancia histórica
-            mask = df[cols].apply(lambda x: gatillo in x.values, axis=1)
-            con_gatillo = df[mask]
             
-            if con_gatillo.empty:
-                frecuentes = [0] * 7
-                confianza = "BAJA (SIN DATOS)"
-                mensaje = "GATILLO NO ENCONTRADO EN LA BASE DE DATOS"
-            else:
-                todos = con_gatillo[cols].values.flatten()
-                socios = [int(n) for n in todos if n != gatillo]
-                
-                # Ponderación por frecuencia
-                counts = pd.Series(socios).value_counts()
-                frecuentes = counts.head(7).index.map(int).tolist()
-                
-                # Si no completamos 7, rellenamos con los más calientes del año
-                if len(frecuentes) < 7:
-                    calientes = pd.Series(df[cols].values.flatten()).value_counts().head(7).index.tolist()
-                    frecuentes = list(set(frecuentes + calientes))[:7]
+            # 1. DETECCIÓN AUTOMÁTICA DEL ÚLTIMO SORTEO
+            ultimo_registro = df.iloc[0]
+            concurso_id = int(ultimo_registro['CONCURSO'])
+            fecha_ultimo = ultimo_registro['FECHA']
+            numeros_actuales = ultimo_registro[cols].values.tolist()
 
-                confianza = "ALTA" if len(con_gatillo) > 5 else "MEDIA"
-                mensaje = "TRAYECTORIA CALCULADA EXITOSAMENTE"
+            # 2. ANÁLISIS DE RESONANCIA DE CONJUNTO
+            # Buscamos qué números suelen acompañar a este set de 7
+            socios_acumulados = []
+            for n in numeros_actuales:
+                mask = df[cols].apply(lambda x: n in x.values, axis=1)
+                con_n = df[mask]
+                # Extraer todos los números excepto el gatillo actual
+                todos = con_n[cols].values.flatten()
+                socios_acumulados.extend([int(v) for v in todos if v != n])
 
-            # MÉTRICAS PARA EL DASHBOARD
+            # 3. GENERACIÓN DEL VECTOR PREDICTIVO (Top 7 más frecuentes del conjunto)
+            counts = pd.Series(socios_acumulados).value_counts()
+            prediccion = counts.head(7).index.map(int).tolist()
+            prediccion.sort()
+
+            # 4. MÉTRICAS DE DASHBOARD
+            suma_v = sum(prediccion)
             res = {
-                "gatillo": gatillo,
-                "socios_frecuentes": sorted(frecuentes),
-                "metricas": {
-                    "balance_par": sum(1 for n in frecuentes if n % 2 == 0),
-                    "promedio": round(float(np.mean(frecuentes)), 1),
-                    "confianza": confianza
+                "status": "OPERATIVO",
+                "ultimo_sorteo": {
+                    "concurso": concurso_id,
+                    "fecha": fecha_ultimo,
+                    "numeros": numeros_actuales
                 },
-                "mensaje": mensaje
+                "prediccion": prediccion,
+                "metricas": {
+                    "paridad": f"{sum(1 for n in prediccion if n % 2 == 0)}P/{sum(1 for n in prediccion if n % 2 != 0)}N",
+                    "promedio": round(float(np.mean(prediccion)), 1),
+                    "suma_total": suma_v,
+                    "alerta_dorada": "ACTIVA" if 130 <= suma_v <= 210 else "NORMAL"
+                }
             }
-        
         except Exception as e:
-            res = {"error": str(e), "mensaje": "FALLO EN EL NÚCLEO"}
+            res = {"status": "ERROR", "mensaje": str(e)}
 
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
