@@ -23,7 +23,7 @@
             text-transform: uppercase;
         }
 
-        /* Efecto de monitor antiguo (Scanlines) */
+        /* Efecto CRT Scanlines */
         body::before {
             content: " ";
             display: block;
@@ -39,7 +39,7 @@
         .terminal {
             width: 90%;
             max-width: 850px;
-            height: 80vh;
+            height: 85vh;
             border: 3px solid var(--neon-green);
             padding: 30px;
             box-shadow: 0 0 20px var(--dark-green), inset 0 0 10px var(--dark-green);
@@ -47,6 +47,7 @@
             background: rgba(0, 20, 0, 0.9);
             display: flex;
             flex-direction: column;
+            cursor: text;
         }
 
         .header {
@@ -75,29 +76,30 @@
             text-shadow: 0 0 5px var(--neon-green);
         }
 
-input {
-    background: transparent;
-    border: none;
-    color: var(--neon-green);
-    font-family: inherit;
-    font-size: inherit;
-    outline: none;
-    width: 100%;
-    text-shadow: 0 0 5px var(--neon-green);
-    caret-color: transparent; /* Escondemos el cursor nativo de Windows */
-}
-
-/* Añadimos esto para que toda la terminal sea "clicable" */
-.terminal {
-    cursor: text;
-}
+        input {
+            background: transparent;
+            border: none;
+            color: var(--neon-green);
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+            width: 100%;
+            text-shadow: 0 0 5px var(--neon-green);
+            caret-color: transparent;
+        }
 
         .stats-box {
             border: 1px dashed var(--neon-green);
-            padding: 10px;
-            margin: 10px 0;
+            padding: 15px;
+            margin: 15px 0;
             color: #fff;
             background: rgba(0, 255, 65, 0.1);
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .cursor {
@@ -115,7 +117,6 @@ input {
             100% { opacity: 1; }
         }
 
-        /* Personalización del scroll */
         #output::-webkit-scrollbar { width: 5px; }
         #output::-webkit-scrollbar-thumb { background: var(--neon-green); }
     </style>
@@ -129,7 +130,7 @@ input {
         <div>> INICIALIZANDO NÚCLEO... OK</div>
         <div>> CONEXIÓN CON DATOS.CSV... ESTABLECIDA</div>
         <div>> PROTOCOLO DE RESONANCIA DE MARZO: ACTIVO</div>
-        <div style="color: #888; margin-top: 10px;">[ ESCRIBE UN NÚMERO PARA ANALIZAR SUS SOCIOS FRECUENTES ]</div>
+        <div style="color: #888; margin-top: 10px;">[ ESCRIBE UN NÚMERO Y PULSA ENTER PARA ANALIZAR SUS 7 SOCIOS ]</div>
     </div>
 
     <div class="input-area">
@@ -139,50 +140,55 @@ input {
     </div>
 </div>
 
-const input = document.getElementById('cmdInput');
-const output = document.getElementById('output');
-const terminal = document.querySelector('.terminal');
+<script>
+    const input = document.getElementById('cmdInput');
+    const output = document.getElementById('output');
+    const terminal = document.querySelector('.terminal');
 
-// ORDEN: Si el Director hace clic en cualquier parte de la terminal, activa el teclado
-terminal.addEventListener('click', () => {
-    input.focus();
-});
+    // Mantiene el foco en el input siempre que se haga clic en la terminal
+    terminal.addEventListener('click', () => {
+        input.focus();
+    });
 
-input.addEventListener('keypress', function (e) {
-    if (e.key === 'Enter' && this.value !== '') {
-        const val = this.value;
-        printToConsole(`<span style="color: #888">> SOLICITANDO ANÁLISIS PARA: ${val}</span>`);
-        
-        fetch(`/api?gatillo=${val}`)
-            .then(response => response.json())
-            .then(data => {
-                const socios = data.socios_frecuentes.join(" - ");
-                printToConsole(`
-                    <div class="stats-box">
-                        [ REPORTE ENIGMA ]<br>
-                        GATILLO: ${data.gatillo}<br>
-                        SOCIOS FRECUENTES: ${socios}<br>
-                        ESTADO: TRANSMISIÓN COMPLETA
-                    </div>
-                `);
-            })
-            .catch(err => {
-                printToConsole(`<span style="color:red">> ERROR: CEREBRO FUERA DE LÍNEA.</span>`);
-            });
-        
-        this.value = '';
+    input.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter' && this.value !== '') {
+            const val = this.value;
+            printToConsole(`<span style="color: #888">> SOLICITANDO ANÁLISIS DE RESONANCIA PARA EL GATILLO: ${val}</span>`);
+            
+            // Llamada a la API de Python
+            fetch(`/api?gatillo=${val}`)
+                .then(response => response.json())
+                .then(data => {
+                    const socios = data.socios_frecuentes.join(" - ");
+                    printToConsole(`
+                        <div class="stats-box">
+                            [ REPORTE ENIGMA - ESCANEO DE 7 PUNTOS ]<br>
+                            GATILLO DETECTADO: ${data.gatillo}<br>
+                            SOCIOS FRECUENTES: <span style="color:#0f0">${socios}</span><br>
+                            MENSAJE: ${data.mensaje}<br>
+                            ESTADO: LISTO PARA JUGADA MAESTRA
+                        </div>
+                    `);
+                })
+                .catch(err => {
+                    printToConsole(`<span style="color:red">> ERROR CRÍTICO: CEREBRO FUERA DE LÍNEA. VERIFICA REQUERIMIENTOS.</span>`);
+                });
+            
+            this.value = '';
+        }
+    });
+
+    function printToConsole(text) {
+        const div = document.createElement('div');
+        div.innerHTML = text;
+        output.appendChild(div);
+        // Auto-scroll hacia abajo
+        output.scrollTop = output.scrollHeight;
     }
-});
 
-function printToConsole(text) {
-    const div = document.createElement('div');
-    div.innerHTML = text;
-    output.appendChild(div);
-    output.scrollTop = output.scrollHeight;
-}
-
-// Foco inicial automático
-window.onload = () => input.focus();
+    // Foco automático al cargar
+    window.onload = () => input.focus();
+</script>
 
 </body>
 </html>
