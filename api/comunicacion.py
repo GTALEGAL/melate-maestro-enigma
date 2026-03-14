@@ -11,7 +11,7 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
 
         try:
-            # 1. Cargar la base de datos (datos.csv debe estar en la raíz)
+            # 1. Cargar la base de datos (datos.csv debe estar en la raíz de tu GitHub)
             ruta_csv = os.path.join(os.getcwd(), 'datos.csv')
             df = pd.read_csv(ruta_csv)
             
@@ -19,14 +19,14 @@ class handler(BaseHTTPRequestHandler):
             df.columns = [c.strip().upper() for c in df.columns]
             cols_r = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']
 
-            # 3. Lógica Maestra: Frecuencia de los últimos 500 sorteos
+            # 3. Lógica: Frecuencia de los últimos 500 sorteos
             marea = df.head(500)
             todos_numeros = marea[cols_r].values.flatten()
             
             from collections import Counter
             conteo = Counter(todos_numeros)
             
-            # Sacamos los 7 más frecuentes (Capas C1 y C10 combinadas)
+            # Sacamos los 7 más frecuentes
             prediccion = [n for n, c in conteo.most_common(7)]
             prediccion.sort()
 
