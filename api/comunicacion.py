@@ -13,48 +13,56 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
 
         try:
-            # Carga de datos
             ruta_csv = os.path.join(os.getcwd(), 'datos.csv')
             df = pd.read_csv(ruta_csv)
             df.columns = [c.strip().upper() for c in df.columns]
             cols = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']
-
-            # --- CAPA 1: FRECUENCIA GENERAL (Últimos 500) ---
-            marea = df.head(500)
-            frec_numeros = marea[cols].values.flatten()
-            c1_pool = [int(n) for n, c in Counter(frec_numeros).most_common(7)]
-            c1_pool.sort()
-
-            # --- CAPA 5: SECUENCIA POR PARES ---
+            
+            # Datos base
+            marea = df.head(1000)
             ult_nums = set(df.iloc[0][cols].values)
             pares_ult = list(combinations(ult_nums, 2))
-            seguidores = []
+            trios_ult = list(combinations(ult_nums, 3))
+
+            # --- CAPA 1: FRECUENCIA ---
+            f_gen = Counter(df[cols].values.flatten())
+            c1 = [int(n) for n, c in f_gen.most_common(7)]
+
+            # --- CAPAS DE SECUENCIA (Pares y Tríos) ---
+            seg_pares = []
+            seg_trios = []
+            for i in range(1, len(marea)):
+                sorteo_h = set(marea.iloc[i][cols].values)
+                if any(set(p).issubset(sorteo_h) for p in pares_ult):
+                    seg_pares.extend(marea.iloc[i-1][cols].values)
+                if any(set(t).issubset(sorteo_h) for t in trios_ult):
+                    seg_trios.extend(marea.iloc[i-1][cols].values)
+
+            f_pares = Counter(seg_pares)
+            f_trios = Counter(seg_trios)
             
-            # Analizamos historial para ver qué salió después de esos pares
-            marea_profunda = df.head(1000)
-            for i in range(1, len(marea_profunda)):
-                sorteo_hist = set(marea_profunda.iloc[i][cols].values)
-                # Si el sorteo histórico contiene alguno de los pares del último sorteo
-                if any(set(p).issubset(sorteo_hist) for p in pares_ult):
-                    seguidores.extend(marea_profunda.iloc[i-1][cols].values)
+            c5 = [int(n) for n, c in f_pares.most_common(7)] if seg_pares else c1
+            c6 = [int(n) for n, c in f_trios.most_common(7)] if seg_trios else c1
+
+            # --- CAPA 10: SCORE MAESTRO (El Algoritmo Final) ---
+            score_final = {}
+            for n in range(1, 57):
+                # Peso: Tríos(x10) + Pares(x5) + Frecuencia(x0.1)
+                puntos = (f_trios[n] * 10) + (f_pares[n] * 5) + (f_gen[n] * 0.1)
+                score_final[n] = round(puntos, 2)
             
-            if seguidores:
-                c5_pool = [int(n) for n, c in Counter(seguidores).most_common(7)]
-            else:
-                c5_pool = c1_pool
-            c5_pool.sort()
+            c10 = sorted(score_final, key=score_final.get, reverse=True)[:7]
 
             respuesta = {
-                "equipo": "MAESTRO-ALFA",
                 "concurso": int(df.iloc[0]['CONCURSO']),
                 "capas": {
-                    "c1_frecuencia": c1_pool,
-                    "c5_pares": c5_pool
-                },
-                "status": "SISTEMA_MULTI_CAPA_OK"
+                    "c1": sorted(c1),
+                    "c5": sorted(c5),
+                    "c6": sorted(c6),
+                    "c10": sorted(c10)
+                }
             }
-
         except Exception as e:
-            respuesta = {"error": str(e), "status": "ERROR_MOTOR"}
+            respuesta = {"error": str(e)}
 
         self.wfile.write(json.dumps(respuesta).encode())
