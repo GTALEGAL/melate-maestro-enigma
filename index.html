@@ -2,105 +2,87 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>MELATE MAESTRO | Dashboard de Control</title>
+    <title>MELATE MAESTRO | Dashboard</title>
     <style>
         :root { --bg: #0b0f19; --card: #161b22; --gold: #d4af37; --green: #238636; }
-        body { background: var(--bg); color: #c9d1d9; font-family: 'Segoe UI', Tahoma, sans-serif; padding: 20px; }
-        .wrapper { max-width: 900px; margin: 0 auto; display: grid; gap: 20px; }
-        .card { background: var(--card); border: 1px solid #30363d; border-radius: 8px; padding: 20px; position: relative; }
-        .card h2 { color: #8b949e; font-size: 0.8rem; text-transform: uppercase; margin: 0 0 15px 0; border-bottom: 1px solid #30363d; padding-bottom: 5px; }
-        .ball { display: inline-flex; width: 35px; height: 35px; background: #21262d; border: 1px solid #30363d; border-radius: 50%; align-items: center; justify-content: center; margin: 4px; font-weight: bold; color: var(--gold); }
-        .active { background: var(--gold); color: #000; border: none; }
-        .final { background: var(--green); color: #fff; box-shadow: 0 0 10px var(--green); border: none; }
-        .status-msg { font-size: 0.75rem; color: #58a6ff; font-style: italic; }
-        .loader { width: 20px; vertical-align: middle; margin-right: 10px; }
+        body { background: var(--bg); color: #c9d1d9; font-family: sans-serif; padding: 20px; }
+        .wrapper { max-width: 800px; margin: 0 auto; }
+        .card { background: var(--card); border: 1px solid #30363d; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
+        .ball { display: inline-flex; width: 35px; height: 35px; background: #21262d; border-radius: 50%; align-items: center; justify-content: center; margin: 4px; font-weight: bold; color: var(--gold); }
+        .active { background: var(--gold); color: #000; }
+        .final { background: var(--green); color: #fff; }
+        .loader-text { color: #58a6ff; font-style: italic; font-size: 0.9rem; }
+        h2 { font-size: 0.8rem; color: #8b949e; text-transform: uppercase; margin-top: 0; }
     </style>
 </head>
 <body>
 
     <div class="wrapper">
-        <h1 style="color:var(--gold); text-align:center;">🛰️ SISTEMA MELATE MAESTRO</h1>
+        <h1 style="color:var(--gold); text-align:center;">MELATE MAESTRO</h1>
 
         <div class="card">
-            <h2>📡 ESTACIÓN 0: ÚLTIMO SORTEO (CONCURSO <span id="num-concurso">...</span>)</h2>
-            <div id="box-ultimo"></div>
-            <div id="msg-0" class="status-msg">Esperando conexión...</div>
+            <h2>📡 CONCURSO <span id="id-concurso">---</span></h2>
+            <div id="box-ultimo"><span class="loader-text">Cargando base de datos...</span></div>
         </div>
 
         <div class="card">
-            <h2>📊 ESTACIÓN 1: FRECUENCIA HISTÓRICA</h2>
+            <h2>📊 CAPA 1: FRECUENCIA</h2>
             <div id="box-c1"></div>
-            <div id="msg-1" class="status-msg"></div>
         </div>
 
         <div class="card">
-            <h2>⚡ ESTACIÓN 2: SECUENCIA DE PARES</h2>
+            <h2>⚡ CAPA 5: SECUENCIA</h2>
             <div id="box-c5"></div>
-            <div id="msg-2" class="status-msg"></div>
         </div>
 
         <div class="card" style="border-color:var(--green)">
-            <h2>🏆 ESTACIÓN 3: SCORE MAESTRO (PROYECCIÓN)</h2>
+            <h2>🏆 CAPA 10: SCORE FINAL</h2>
             <div id="box-c10"></div>
-            <div id="msg-3" class="status-msg"></div>
         </div>
     </div>
 
     <script>
-        const gif = "https://i.gifer.com/ZZ5H.gif"; // Spinner de carga
+        // Función para dibujar las bolas
+        function dibujar(id, nums, clase = '') {
+            const container = document.getElementById(id);
+            if (!nums || nums.length === 0) return;
+            container.innerHTML = nums.map(n => `<div class="ball ${clase}">${n}</div>`).join('');
+        }
 
-        async function procesar() {
-            // --- PASO 1: CAPA 1 Y DATOS BASE ---
-            document.getElementById('msg-0').innerHTML = `<img src="${gif}" class="loader"> Conectando con API...`;
+        async function ejecutarSistema() {
             try {
+                // ETAPA 1: CAPA 1
                 const r1 = await fetch('/api/capa1');
                 const d1 = await r1.json();
-                
-                document.getElementById('num-concurso').innerText = d1.concurso;
-                render('box-ultimo', d1.numeros_ultimo, 'active');
-                render('box-c1', d1.capa1);
-                document.getElementById('msg-0').innerText = "✓ Datos base sincronizados";
-                document.getElementById('msg-1').innerText = "✓ Capa 1 calculada";
-            } catch (e) {
-                document.getElementById('msg-0').innerHTML = "<span style='color:red'>X Error en Capa 1</span>";
-            }
+                document.getElementById('id-concurso').innerText = d1.concurso;
+                dibujar('box-ultimo', d1.numeros_ultimo, 'active');
+                dibujar('box-c1', d1.capa1);
 
-            // PAUSA DE 3 SEGUNDOS PARA NO FORZAR EL SIGUIENTE PROCESO
-            document.getElementById('msg-2').innerHTML = `<img src="${gif}" class="loader"> Iniciando Radar de Pares...`;
-            await new Promise(r => setTimeout(r, 3000));
+                // ESPERA 2 SEGUNDOS
+                await new Promise(res => setTimeout(res, 2000));
+                document.getElementById('box-c5').innerHTML = "<span class='loader-text'>Analizando Pares...</span>";
 
-            // --- PASO 2: CAPA 5 ---
-            try {
+                // ETAPA 2: CAPA 5
                 const r2 = await fetch('/api/capa5');
                 const d2 = await r2.json();
-                render('box-c5', d2.capa5);
-                document.getElementById('msg-2').innerText = "✓ Capa 5 analizada con éxito";
-            } catch (e) {
-                document.getElementById('msg-2').innerHTML = "<span style='color:red'>X Error en Capa 5</span>";
-            }
+                dibujar('box-c5', d2.capa5);
 
-            // OTRA PAUSA
-            document.getElementById('msg-3').innerHTML = `<img src="${gif}" class="loader"> Calculando Score Final...`;
-            await new Promise(r => setTimeout(r, 3000));
+                // ESPERA 2 SEGUNDOS
+                await new Promise(res => setTimeout(res, 2000));
+                document.getElementById('box-c10').innerHTML = "<span class='loader-text'>Calculando Score...</span>";
 
-            // --- PASO 3: CAPA 10 ---
-            try {
+                // ETAPA 3: CAPA 10
                 const r3 = await fetch('/api/capa10');
                 const d3 = await r3.json();
-                render('box-c10', d3.capa10, 'final');
-                document.getElementById('msg-3').innerText = "✓ Proyección Maestra Completa";
-            } catch (e) {
-                document.getElementById('msg-3').innerHTML = "<span style='color:red'>X Error en Capa 10</span>";
+                dibujar('box-c10', d3.capa10, 'final');
+
+            } catch (err) {
+                console.error(err);
+                document.body.innerHTML += `<p style="color:red; text-align:center;">ERROR: No se pudo conectar con la API. Revisa los archivos .py en /api</p>`;
             }
         }
 
-        function render(id, nums, cls='') {
-            const container = document.getElementById(id);
-            if (!nums) return;
-            container.innerHTML = nums.map(n => `<div class="ball ${cls}">${n}</div>`).join('');
-        }
-
-        window.onload = procesar;
+        window.onload = ejecutarSistema;
     </script>
 </body>
 </html>
