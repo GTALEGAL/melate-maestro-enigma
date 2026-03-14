@@ -1,39 +1,106 @@
-<script>
-    const loaderGif = "<img src='https://i.gifer.com/ZZ5H.gif' width='25' style='vertical-align:middle'> Procesando Capa...";
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>MELATE MAESTRO | Dashboard de Control</title>
+    <style>
+        :root { --bg: #0b0f19; --card: #161b22; --gold: #d4af37; --green: #238636; }
+        body { background: var(--bg); color: #c9d1d9; font-family: 'Segoe UI', Tahoma, sans-serif; padding: 20px; }
+        .wrapper { max-width: 900px; margin: 0 auto; display: grid; gap: 20px; }
+        .card { background: var(--card); border: 1px solid #30363d; border-radius: 8px; padding: 20px; position: relative; }
+        .card h2 { color: #8b949e; font-size: 0.8rem; text-transform: uppercase; margin: 0 0 15px 0; border-bottom: 1px solid #30363d; padding-bottom: 5px; }
+        .ball { display: inline-flex; width: 35px; height: 35px; background: #21262d; border: 1px solid #30363d; border-radius: 50%; align-items: center; justify-content: center; margin: 4px; font-weight: bold; color: var(--gold); }
+        .active { background: var(--gold); color: #000; border: none; }
+        .final { background: var(--green); color: #fff; box-shadow: 0 0 10px var(--green); border: none; }
+        .status-msg { font-size: 0.75rem; color: #58a6ff; font-style: italic; }
+        .loader { width: 20px; vertical-align: middle; margin-right: 10px; }
+    </style>
+</head>
+<body>
 
-    async function iniciarSistemaMaestro() {
-        // Estación 1: Datos Base y Capa 1
-        document.getElementById('c1-frec').innerHTML = loaderGif;
-        const r1 = await fetch('/api/capa1');
-        const d1 = await r1.json();
-        
-        document.getElementById('id-concurso').innerText = d1.concurso;
-        render('ultimo-sorteo', d1.numeros_ultimo, 'active');
-        render('c1-frec', d1.capa1);
+    <div class="wrapper">
+        <h1 style="color:var(--gold); text-align:center;">🛰️ SISTEMA MELATE MAESTRO</h1>
 
-        // PAUSA TÉCNICA DE 3 SEGUNDOS
-        await new Promise(r => setTimeout(r, 3000));
+        <div class="card">
+            <h2>📡 ESTACIÓN 0: ÚLTIMO SORTEO (CONCURSO <span id="num-concurso">...</span>)</h2>
+            <div id="box-ultimo"></div>
+            <div id="msg-0" class="status-msg">Esperando conexión...</div>
+        </div>
 
-        // Estación 2: Capa 5
-        document.getElementById('c5-pares').innerHTML = loaderGif;
-        const r2 = await fetch('/api/capa5');
-        const d2 = await r2.json();
-        render('c5-pares', d2.capa5);
+        <div class="card">
+            <h2>📊 ESTACIÓN 1: FRECUENCIA HISTÓRICA</h2>
+            <div id="box-c1"></div>
+            <div id="msg-1" class="status-msg"></div>
+        </div>
 
-        // PAUSA TÉCNICA DE 3 SEGUNDOS
-        await new Promise(r => setTimeout(r, 3000));
+        <div class="card">
+            <h2>⚡ ESTACIÓN 2: SECUENCIA DE PARES</h2>
+            <div id="box-c5"></div>
+            <div id="msg-2" class="status-msg"></div>
+        </div>
 
-        // Estación 3: Capa 10 (Resultado Maestro)
-        document.getElementById('c10-score').innerHTML = loaderGif;
-        const r3 = await fetch('/api/capa10');
-        const d3 = await r3.json();
-        render('c10-score', d3.capa10, 'final');
-    }
+        <div class="card" style="border-color:var(--green)">
+            <h2>🏆 ESTACIÓN 3: SCORE MAESTRO (PROYECCIÓN)</h2>
+            <div id="box-c10"></div>
+            <div id="msg-3" class="status-msg"></div>
+        </div>
+    </div>
 
-    window.onload = iniciarSistemaMaestro;
+    <script>
+        const gif = "https://i.gifer.com/ZZ5H.gif"; // Spinner de carga
 
-    function render(id, nums, cls='') {
-        const container = document.getElementById(id);
-        container.innerHTML = nums.map(n => `<div class="ball ${cls}">${n}</div>`).join('');
-    }
-</script>
+        async function procesar() {
+            // --- PASO 1: CAPA 1 Y DATOS BASE ---
+            document.getElementById('msg-0').innerHTML = `<img src="${gif}" class="loader"> Conectando con API...`;
+            try {
+                const r1 = await fetch('/api/capa1');
+                const d1 = await r1.json();
+                
+                document.getElementById('num-concurso').innerText = d1.concurso;
+                render('box-ultimo', d1.numeros_ultimo, 'active');
+                render('box-c1', d1.capa1);
+                document.getElementById('msg-0').innerText = "✓ Datos base sincronizados";
+                document.getElementById('msg-1').innerText = "✓ Capa 1 calculada";
+            } catch (e) {
+                document.getElementById('msg-0').innerHTML = "<span style='color:red'>X Error en Capa 1</span>";
+            }
+
+            // PAUSA DE 3 SEGUNDOS PARA NO FORZAR EL SIGUIENTE PROCESO
+            document.getElementById('msg-2').innerHTML = `<img src="${gif}" class="loader"> Iniciando Radar de Pares...`;
+            await new Promise(r => setTimeout(r, 3000));
+
+            // --- PASO 2: CAPA 5 ---
+            try {
+                const r2 = await fetch('/api/capa5');
+                const d2 = await r2.json();
+                render('box-c5', d2.capa5);
+                document.getElementById('msg-2').innerText = "✓ Capa 5 analizada con éxito";
+            } catch (e) {
+                document.getElementById('msg-2').innerHTML = "<span style='color:red'>X Error en Capa 5</span>";
+            }
+
+            // OTRA PAUSA
+            document.getElementById('msg-3').innerHTML = `<img src="${gif}" class="loader"> Calculando Score Final...`;
+            await new Promise(r => setTimeout(r, 3000));
+
+            // --- PASO 3: CAPA 10 ---
+            try {
+                const r3 = await fetch('/api/capa10');
+                const d3 = await r3.json();
+                render('box-c10', d3.capa10, 'final');
+                document.getElementById('msg-3').innerText = "✓ Proyección Maestra Completa";
+            } catch (e) {
+                document.getElementById('msg-3').innerHTML = "<span style='color:red'>X Error en Capa 10</span>";
+            }
+        }
+
+        function render(id, nums, cls='') {
+            const container = document.getElementById(id);
+            if (!nums) return;
+            container.innerHTML = nums.map(n => `<div class="ball ${cls}">${n}</div>`).join('');
+        }
+
+        window.onload = procesar;
+    </script>
+</body>
+</html>
