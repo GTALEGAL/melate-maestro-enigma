@@ -2,83 +2,132 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>SISTEMA MAESTRO - DIAGNÓSTICO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA MELATE MAESTRO | Inteligencia de Datos</title>
     <style>
-        body { background: #0b0f19; color: white; font-family: sans-serif; padding: 20px; }
-        .card { background: #161b22; border: 1px solid #30363d; padding: 15px; margin-bottom: 10px; border-radius: 8px; }
-        .ball { display: inline-flex; width: 30px; height: 30px; background: #d4af37; color: black; border-radius: 50%; align-items: center; justify-content: center; margin: 3px; font-weight: bold; }
-        .debug-msg { color: #58a6ff; font-size: 0.8rem; font-family: monospace; background: #000; padding: 5px; display: block; margin-top: 5px; }
-        .error { color: #ff7b72; }
+        :root { --bg: #0b0f19; --card: #161b22; --gold: #d4af37; --green: #238636; --blue: #58a6ff; }
+        body { background: var(--bg); color: #c9d1d9; font-family: 'Segoe UI', sans-serif; padding: 20px; margin: 0; }
+        .wrapper { max-width: 900px; margin: 0 auto; display: grid; gap: 20px; }
+        
+        header { text-align: center; border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-bottom: 20px; }
+        h1 { color: var(--gold); letter-spacing: 2px; margin: 0; font-size: 1.8rem; }
+
+        .card { background: var(--card); border: 1px solid #30363d; border-radius: 12px; padding: 20px; position: relative; transition: 0.3s; }
+        .card:hover { border-color: var(--gold); }
+        .card h2 { color: #8b949e; font-size: 0.8rem; text-transform: uppercase; margin: 0 0 15px 0; border-bottom: 1px solid #30363d; padding-bottom: 5px; }
+
+        .ball-container { display: flex; flex-wrap: wrap; gap: 8px; min-height: 45px; align-items: center; }
+        .ball { width: 40px; height: 40px; background: #21262d; border: 1px solid #30363d; border-radius: 50%; display: flex; 
+                align-items: center; justify-content: center; font-weight: bold; color: var(--gold); font-size: 1rem; }
+        .active { background: var(--gold); color: #000; border: none; box-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
+        .final { background: var(--green); color: #fff; border: none; box-shadow: 0 0 15px var(--green); }
+
+        .status-bar { font-size: 0.75rem; color: var(--blue); margin-top: 15px; font-family: monospace; background: #000; padding: 5px 10px; border-radius: 4px; }
+        .loader-gif { width: 18px; vertical-align: middle; margin-right: 8px; }
+        .error { color: #ff7b72 !important; }
+
+        .concurso-badge { background: #30363d; padding: 4px 10px; border-radius: 20px; color: var(--gold); font-size: 0.9rem; float: right; }
     </style>
 </head>
 <body>
 
-    <h1>🛰️ MELATE MAESTRO: ESTADO DE CONEXIÓN</h1>
+    <div class="wrapper">
+        <header>
+            <h1>🛰️ MELATE MAESTRO</h1>
+            <p style="font-size: 0.8rem; color: #8b949e;">CENTRO DE PROCESAMIENTO ESTADÍSTICO</p>
+        </header>
 
-    <div class="card">
-        <h2>ESTACIÓN 1 (DATOS BASE)</h2>
-        <div id="res-1">Esperando...</div>
-        <div id="debug-1" class="debug-msg">Estado: Iniciando...</div>
-    </div>
+        <div class="card">
+            <span class="concurso-badge">CONCURSO: <span id="num-concurso">---</span></span>
+            <h2>📡 ESTACIÓN 0: ÚLTIMO SORTEO (CAUSA)</h2>
+            <div id="box-ultimo" class="ball-container"></div>
+            <div id="msg-0" class="status-bar">Iniciando conexión con el núcleo...</div>
+        </div>
 
-    <div class="card">
-        <h2>ESTACIÓN 2 (PARES)</h2>
-        <div id="res-2">---</div>
-        <div id="debug-2" class="debug-msg">Estado: Pendiente...</div>
-    </div>
+        <div class="card">
+            <h2>📊 ESTACIÓN 1: FRECUENCIA HISTÓRICA</h2>
+            <div id="box-c1" class="ball-container"></div>
+            <div id="msg-1" class="status-bar">Esperando estación anterior...</div>
+        </div>
 
-    <div class="card">
-        <h2>ESTACIÓN 3 (SCORE FINAL)</h2>
-        <div id="res-3">---</div>
-        <div id="debug-3" class="debug-msg">Estado: Pendiente...</div>
+        <div class="card">
+            <h2>⚡ ESTACIÓN 2: SECUENCIA DE PARES (EFECTO)</h2>
+            <div id="box-c5" class="ball-container"></div>
+            <div id="msg-2" class="status-bar">Esperando estación anterior...</div>
+        </div>
+
+        <div class="card" style="border-top: 4px solid var(--green);">
+            <h2>🏆 ESTACIÓN 3: SCORE MAESTRO (PROYECCIÓN FINAL)</h2>
+            <div id="box-c10" class="ball-container"></div>
+            <div id="msg-3" class="status-bar">Esperando estación anterior...</div>
+        </div>
     </div>
 
     <script>
-        async function testConexion() {
-            // PRUEBA CAPA 1
+        const gif = "https://i.gifer.com/ZZ5H.gif"; // GIF de carga
+
+        async function ejecutarAnalisis() {
+            // --- PASO 1: CAPA 1 ---
+            const msg0 = document.getElementById('msg-0');
+            const msg1 = document.getElementById('msg-1');
+            
+            msg0.innerHTML = `<img src="${gif}" class="loader-gif"> Accediendo a datos.csv...`;
+            
             try {
                 const r1 = await fetch('/api/capa1');
                 const d1 = await r1.json();
-                document.getElementById('debug-1').innerText = "RECIBIDO: " + JSON.stringify(d1);
+
+                if (d1.error_detectado) throw new Error(d1.error_detectado);
+
+                document.getElementById('num-concurso').innerText = d1.concurso;
+                render('box-ultimo', d1.numeros_ultimo, 'active');
+                render('box-c1', d1.capa1);
                 
-                // Dibujar si existen los datos
-                if(d1.capa1) {
-                    document.getElementById('res-1').innerHTML = d1.capa1.map(n => `<div class="ball">${n}</div>`).join('');
-                }
+                msg0.innerHTML = "✓ Conexión establecida. Datos de origen validados.";
+                msg1.innerHTML = "✓ Capa 1: Frecuencias procesadas correctamente.";
             } catch (e) {
-                document.getElementById('debug-1').innerHTML = "<span class='error'>ERROR: No responde /api/capa1</span>";
+                msg0.innerHTML = `<span class="error">X FALLO CRÍTICO: ${e.message}</span>`;
+                return; // Detener sistema si no hay datos base
             }
 
-            await new Promise(r => setTimeout(r, 2000));
+            // PAUSA DE SEGURIDAD (3 SEGUNDOS)
+            const msg2 = document.getElementById('msg-2');
+            msg2.innerHTML = `<img src="${gif}" class="loader-gif"> Escaneando patrones de pares...`;
+            await new Promise(r => setTimeout(r, 3000));
 
-            // PRUEBA CAPA 5
+            // --- PASO 2: CAPA 5 ---
             try {
                 const r2 = await fetch('/api/capa5');
                 const d2 = await r2.json();
-                document.getElementById('debug-2').innerText = "RECIBIDO: " + JSON.stringify(d2);
-                if(d2.capa5) {
-                    document.getElementById('res-2').innerHTML = d2.capa5.map(n => `<div class="ball">${n}</div>`).join('');
-                }
+                render('box-c5', d2.capa5);
+                msg2.innerHTML = "✓ Capa 5: Secuencias de pares calculadas.";
             } catch (e) {
-                document.getElementById('debug-2').innerHTML = "<span class='error'>ERROR: No responde /api/capa5</span>";
+                msg2.innerHTML = `<span class="error">X ERROR EN CAPA 5: Verificar servidor.</span>`;
             }
 
-            await new Promise(r => setTimeout(r, 2000));
+            // PAUSA DE SEGURIDAD (3 SEGUNDOS)
+            const msg3 = document.getElementById('msg-3');
+            msg3.innerHTML = `<img src="${gif}" class="loader-gif"> Ponderando Score Maestro...`;
+            await new Promise(r => setTimeout(r, 3000));
 
-            // PRUEBA CAPA 10
+            // --- PASO 3: CAPA 10 ---
             try {
                 const r3 = await fetch('/api/capa10');
                 const d3 = await r3.json();
-                document.getElementById('debug-3').innerText = "RECIBIDO: " + JSON.stringify(d3);
-                if(d3.capa10) {
-                    document.getElementById('res-3').innerHTML = d3.capa10.map(n => `<div class="ball" style="background:#238636;color:white">${n}</div>`).join('');
-                }
+                render('box-c10', d3.capa10, 'final');
+                msg3.innerHTML = "✓ SISTEMA COMPLETO: Proyección final generada.";
             } catch (e) {
-                document.getElementById('debug-3').innerHTML = "<span class='error'>ERROR: No responde /api/capa10</span>";
+                msg3.innerHTML = `<span class="error">X ERROR EN CAPA 10: Fallo en integración.</span>`;
             }
         }
 
-        window.onload = testConexion;
+        function render(id, nums, cls='') {
+            const container = document.getElementById(id);
+            if (!nums || nums.length === 0) return;
+            container.innerHTML = nums.map(n => `<div class="ball ${cls}">${n}</div>`).join('');
+        }
+
+        window.onload = ejecutarAnalisis;
     </script>
 </body>
 </html>
