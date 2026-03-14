@@ -5,97 +5,81 @@
     <title>MELATE MAESTRO | Inteligencia de Datos</title>
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --gold: #d4af37; --success: #22c55e; }
-        body { background: var(--bg); color: #f1f5f9; font-family: 'Segoe UI', system-ui, sans-serif; padding: 20px; margin: 0; }
-        .wrapper { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .card { background: var(--card); border-radius: 12px; padding: 15px; border-top: 3px solid var(--gold); }
+        body { background: var(--bg); color: #f1f5f9; font-family: 'Segoe UI', sans-serif; padding: 20px; margin: 0; }
+        .wrapper { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: var(--card); border-radius: 12px; padding: 20px; border-top: 3px solid var(--gold); }
         .full { grid-column: 1 / -1; }
         .score-card { background: linear-gradient(135deg, #064e3b 0%, #065f46 100%); border-top-color: var(--success); }
-        h1 { grid-column: 1 / -1; text-align: center; color: var(--gold); text-transform: uppercase; margin-bottom: 0; }
-        h2 { font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 5px; }
-        .ball { display: inline-flex; width: 32px; height: 32px; background: #334155; border-radius: 50%; align-items: center; justify-content: center; margin: 3px; font-weight: bold; font-size: 0.85rem; }
+        h1 { grid-column: 1 / -1; text-align: center; color: var(--gold); text-transform: uppercase; margin-bottom: 20px; }
+        h2 { font-size: 0.9rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 5px; }
+        .ball { display: inline-flex; width: 40px; height: 40px; background: #334155; border-radius: 50%; align-items: center; justify-content: center; margin: 5px; font-weight: bold; }
         .active { background: var(--gold); color: #000; }
-        .final { background: var(--success); color: #fff; box-shadow: 0 0 10px var(--success); }
-        .sub { font-size: 0.7rem; color: #64748b; margin-top: 8px; }
-        .pair { display: inline-block; background: #000; padding: 4px; border-radius: 15px; margin: 2px; }
+        .final { background: var(--success); color: #fff; box-shadow: 0 0 15px var(--success); }
+        .sub { font-size: 0.8rem; color: #64748b; margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <div class="wrapper">
-        <h1>🛰️ MELATE MAESTRO - Dashboard de Control</h1>
+        <h1>🛰️ MELATE MAESTRO - Dashboard Operativo</h1>
 
         <div class="card full">
-            <h2>📡 CAPA 0: Último Sorteo Detectado (Concurso <span id="id-c"></span>)</h2>
-            <div id="ultimo"></div>
+            <h2>📡 CONCURSO <span id="id-concurso">...</span> (Base de Análisis)</h2>
+            <div id="ultimo-sorteo"></div>
+            <p class="sub">Números extraídos del último registro oficial en datos.csv.</p>
         </div>
 
         <div class="card">
             <h2>📊 Capa 1: Frecuencia Histórica</h2>
-            <div id="c1"></div>
-            <p class="sub">Basado en el histórico total.</p>
+            <div id="c1-frec"></div>
+            <p class="sub">Los 7 números con más apariciones en toda la historia.</p>
         </div>
 
         <div class="card">
-            <h2>🔗 Capa 2 y 3: Nodos / Sincronía</h2>
-            <div id="c23"></div>
-            <p class="sub">Pares y tríos con más co-aparición.</p>
-        </div>
-
-        <div class="card">
-            <h2>🔫 Capa 9: Gatillos (Efecto 1D)</h2>
-            <div id="c9"></div>
-            <p class="sub">Proyección por números individuales.</p>
-        </div>
-
-        <div class="card">
-            <h2>🧬 Capa 5: Secuencia de Pares</h2>
-            <div id="c5"></div>
-            <p class="sub">Números tras parejas del sorteo actual.</p>
-        </div>
-
-        <div class="card">
-            <h2>☄️ Capa 6: Secuencia de Tríos</h2>
-            <div id="c6"></div>
-            <p class="sub">Proyección de alta especificidad.</p>
-        </div>
-
-        <div class="card">
-            <h2>📈 Capas 4, 7, 8: Distancias</h2>
-            <div style="font-size: 0.8rem; color: #22c55e;">SISTEMA CALIBRADO ✓</div>
-            <p class="sub">Análisis de clusters y redes activado.</p>
+            <h2>⚡ Capa 5: Secuencia de Pares</h2>
+            <div id="c5-pares"></div>
+            <p class="sub">Números con mayor probabilidad tras los pares actuales.</p>
         </div>
 
         <div class="card full score-card">
-            <h2>🏆 CAPA 10: SCORE MAESTRO (Vector de Decisión Final)</h2>
-            <div id="c10"></div>
-            <p style="font-size: 0.9rem; margin-top: 10px;">Este ranking pondera las 10 capas anteriores para detectar las resonancias más fuertes en el próximo sorteo.</p>
+            <h2>🏆 CAPA 10: SCORE MAESTRO (PROYECCIÓN FINAL)</h2>
+            <div id="c10-score"></div>
+            <p style="margin-top: 15px; font-weight: bold;">Vector calculado mediante ponderación de todas las capas activas.</p>
         </div>
     </div>
 
     <script>
         window.onload = async () => {
-            const r = await fetch('/api/index');
-            const d = await r.json();
+            try {
+                const r = await fetch('/api/index');
+                const d = await r.json();
 
-            document.getElementById('id-c').innerText = d.info.concurso;
-            render('ultimo', d.info.numeros, 'active');
-            render('c1', d.analisis.c1_frec);
-            render('c9', d.analisis.c9_gatillos);
-            render('c5', d.analisis.c5_pares_seq);
-            render('c6', d.analisis.c6_trios_seq.length ? d.analisis.c6_trios_seq : [0,0,0,0,0,0,0]);
-            render('c10', d.analisis.c10_score, 'final');
+                if (d.status === "OPERATIVO" || d.info) {
+                    // 1. Mostrar Concurso y Números Base
+                    document.getElementById('id-concurso').innerText = d.info.concurso;
+                    render('ultimo-sorteo', d.info.numeros, 'active');
 
-            const c23 = document.getElementById('c23');
-            c23.innerHTML = d.analisis.c2_pares.slice(0,3).map(p => `
-                <div class="pair">
-                    <div class="ball active" style="width:25px;height:25px;font-size:0.7rem;">${p.p[0]}</div>
-                    <div class="ball active" style="width:25px;height:25px;font-size:0.7rem;">${p.p[1]}</div>
-                </div>
-            `).join('');
+                    // 2. Mostrar Capa 1 (Frecuencia)
+                    render('c1-frec', d.analisis.c1_frec);
+
+                    // 3. Mostrar Capa 5 (Pares Seq)
+                    render('c5-pares', d.analisis.c5_pares_seq);
+
+                    // 4. Mostrar Capa 10 (Score Maestro)
+                    render('c10-score', d.analisis.c10_score, 'final');
+                }
+            } catch (err) {
+                console.error("Fallo de enlace:", err);
+            }
         };
 
         function render(id, nums, cls='') {
-            document.getElementById(id).innerHTML = nums.map(n => `<div class="ball ${cls}">${n}</div>`).join('');
+            const container = document.getElementById(id);
+            if (!nums || nums.length === 0) {
+                container.innerHTML = "<span style='color:red'>SIN DATOS SUFICIENTES</span>";
+                return;
+            }
+            container.innerHTML = nums.map(n => `<div class="ball ${cls}">${n}</div>`).join('');
         }
     </script>
 </body>
