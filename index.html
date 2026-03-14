@@ -2,134 +2,76 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MELATE MAESTRO | Inteligencia Estadística</title>
+    <title>MELATE MAESTRO | Dashboard Inteligente</title>
     <style>
-        :root {
-            --primary-bg: #f4f7f9;
-            --card-bg: #ffffff;
-            --accent: #d4af37; /* Dorado Melate */
-            --text-main: #2c3e50;
-            --text-muted: #7f8c8d;
-            --border: #e1e8ed;
+        body { background: #0f172a; color: #f8fafc; font-family: sans-serif; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: #1e293b; padding: 20px; border-radius: 12px; border-top: 4px solid #d4af37; }
+        .score-card { border-top-color: #22c55e; background: #064e3b; }
+        .ball { 
+            display: inline-flex; width: 35px; height: 35px; background: #334155; 
+            border-radius: 50%; align-items: center; justify-content: center; 
+            margin: 5px; font-weight: bold; font-size: 0.9rem;
         }
-
-        body {
-            background-color: var(--primary-bg);
-            color: var(--text-main);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0; padding: 20px;
-        }
-
-        .container { max-width: 1000px; margin: 0 auto; }
-
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid var(--accent);
-            padding-bottom: 10px;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            border: 1px solid var(--border);
-        }
-
-        .full-width { grid-column: 1 / -1; }
-
-        h2 { color: var(--accent); margin-top: 0; font-size: 1.1rem; text-transform: uppercase; }
-
-        .ball-container { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
-        .ball {
-            width: 35px; height: 35px;
-            background: #eee; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: bold; font-size: 0.9rem;
-        }
-        .ball.active { background: var(--accent); color: white; }
-
-        .stats-list { list-style: none; padding: 0; }
-        .stats-list li {
-            display: flex; justify-content: space-between;
-            padding: 8px 0; border-bottom: 1px solid var(--border);
-            font-size: 0.9rem;
-        }
-
-        .status-tag {
-            font-size: 0.7rem; background: #e8f5e9; color: #2e7d32;
-            padding: 4px 8px; border-radius: 4px; font-weight: bold;
-        }
+        .active { background: #d4af37; color: #000; }
+        .score-ball { background: #22c55e; color: #fff; box-shadow: 0 0 10px #22c55e; }
+        h1 { text-align: center; color: #d4af37; text-transform: uppercase; letter-spacing: 2px; }
+        .tag { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1>MELATE MAESTRO</h1>
-        <div class="status-tag">SISTEMA OPERATIVO // CAPA 1 ACTIVADA</div>
-    </header>
+    <h1>🛰️ Melate Maestro v1.0</h1>
+    <p style="text-align: center;">Centro de Inteligencia Estadística - Análisis de 10 Capas</p>
 
-    <div class="dashboard-grid">
-        <div class="card full-width">
-            <h2>📡 Último Registro en HIST (Concurso <span id="id-concurso">...</span>)</h2>
-            <div id="numeros-ultimo" class="ball-container"></div>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 10px;">
-                Fecha: <span id="fecha-ultimo">...</span> | Día: <span id="dia-ultimo">...</span>
-            </p>
+    <div class="grid">
+        <div class="card" style="grid-column: 1 / -1;">
+            <span class="tag">Situación Actual - Concurso <span id="conc"></span></span>
+            <div id="ultimo-row" style="margin-top:10px;"></div>
         </div>
 
         <div class="card">
-            <h2>📊 Capa 1: Números de Alta Frecuencia</h2>
-            <div id="frecuencia-general" class="ball-container"></div>
-            <p style="font-size: 0.8rem; margin-top: 10px;">Top 7 números con más apariciones históricas.</p>
+            <h2>📊 Capa 1: Frecuencia</h2>
+            <div id="c1"></div>
+            <p class="tag">Números con mayor aparición histórica.</p>
         </div>
 
         <div class="card">
-            <h2>📅 Tendencia por Día (<span id="nombre-dia">...</span>)</h2>
-            <div id="frecuencia-dia" class="ball-container"></div>
-            <p style="font-size: 0.8rem; margin-top: 10px;">Números que más salen en este día específico.</p>
+            <h2>🔗 Capa 5: Efecto Pares</h2>
+            <div id="c5"></div>
+            <p class="tag">Proyección tras parejas del último sorteo.</p>
+        </div>
+
+        <div class="card">
+            <h2>🧬 Capa 6: Efecto Tríos</h2>
+            <div id="c6"></div>
+            <p class="tag">Alta precisión basada en tríos históricos.</p>
+        </div>
+
+        <div class="card score-card" style="grid-column: 1 / -1;">
+            <h2>🏆 Capa 10: Score Maestro (Ranking Final)</h2>
+            <div id="c10"></div>
+            <p style="margin-top:10px;">Este es el vector final ponderando todas las relaciones estadísticas del sistema.</p>
         </div>
     </div>
-</div>
 
-<script>
-    window.onload = async () => {
-        try {
-            const response = await fetch('/api/index');
-            const data = await response.json();
+    <script>
+        window.onload = async () => {
+            const res = await fetch('/api/index');
+            const data = await res.json();
 
-            // Llenar datos último sorteo
-            document.getElementById('id-concurso').innerText = data.ultimo.concurso;
-            document.getElementById('fecha-ultimo').innerText = data.ultimo.fecha;
-            document.getElementById('dia-ultimo').innerText = data.ultimo.dia;
-            renderBalls('numeros-ultimo', data.ultimo.numeros, true);
+            document.getElementById('conc').innerText = data.ultimo.concurso;
+            render('ultimo-row', data.ultimo.numeros, 'active');
+            render('c1', data.capas.c1_frecuencia);
+            render('c5', data.capas.c5_efecto_pares);
+            render('c6', data.capas.c6_efecto_trios);
+            render('c10', data.capas.c10_score_maestro, 'score-ball');
+        };
 
-            // Llenar Frecuencias Generales
-            renderBalls('frecuencia-general', data.capa1.general);
-
-            // Llenar Frecuencias por Día
-            document.getElementById('nombre-dia').innerText = data.ultimo.dia;
-            renderBalls('frecuencia-dia', data.capa1.por_dia);
-
-        } catch (e) {
-            console.error("Error cargando Melate Maestro:", e);
+        function render(id, nums, cls='') {
+            const cont = document.getElementById(id);
+            cont.innerHTML = nums.map(n => `<div class="ball ${cls}">${n}</div>`).join('');
         }
-    };
-
-    function renderBalls(id, nums, active=false) {
-        const container = document.getElementById(id);
-        container.innerHTML = nums.map(n => `<div class="ball ${active ? 'active' : ''}">${n}</div>`).join('');
-    }
-</script>
-
+    </script>
 </body>
 </html>
