@@ -1,31 +1,39 @@
 <script>
-    async function ejecutarAnalisis() {
-        const loader = "<img src='https://i.gifer.com/ZZ5H.gif' width='30'> Analizando...";
+    const loaderGif = "<img src='https://i.gifer.com/ZZ5H.gif' width='25' style='vertical-align:middle'> Procesando Capa...";
+
+    async function iniciarSistemaMaestro() {
+        // Estación 1: Datos Base y Capa 1
+        document.getElementById('c1-frec').innerHTML = loaderGif;
+        const r1 = await fetch('/api/capa1');
+        const d1 = await r1.json();
         
-        // PASO 1: Capa 1 (Frecuencia)
-        document.getElementById('c1-frec').innerHTML = loader;
-        const res1 = await fetch('/api/capa1');
-        const data1 = await res1.json();
-        render('c1-frec', data1.numeros);
+        document.getElementById('id-concurso').innerText = d1.concurso;
+        render('ultimo-sorteo', d1.numeros_ultimo, 'active');
+        render('c1-frec', d1.capa1);
 
-        // PAUSA DE 3 SEGUNDOS PARA EL "RADAR"
+        // PAUSA TÉCNICA DE 3 SEGUNDOS
         await new Promise(r => setTimeout(r, 3000));
 
-        // PASO 2: Capa 5 (Pares)
-        document.getElementById('c5-pares').innerHTML = loader;
-        const res2 = await fetch('/api/capa5');
-        const data2 = await res2.json();
-        render('c5-pares', data2.numeros);
+        // Estación 2: Capa 5
+        document.getElementById('c5-pares').innerHTML = loaderGif;
+        const r2 = await fetch('/api/capa5');
+        const d2 = await r2.json();
+        render('c5-pares', d2.capa5);
 
-        // OTRA PAUSA
+        // PAUSA TÉCNICA DE 3 SEGUNDOS
         await new Promise(r => setTimeout(r, 3000));
 
-        // PASO 3: Capa 10 (Score Final)
-        document.getElementById('c10-score').innerHTML = loader;
-        const res3 = await fetch('/api/capa10');
-        const data3 = await res3.json();
-        render('c10-score', data3.numeros, 'final');
+        // Estación 3: Capa 10 (Resultado Maestro)
+        document.getElementById('c10-score').innerHTML = loaderGif;
+        const r3 = await fetch('/api/capa10');
+        const d3 = await r3.json();
+        render('c10-score', d3.capa10, 'final');
     }
 
-    window.onload = ejecutarAnalisis;
+    window.onload = iniciarSistemaMaestro;
+
+    function render(id, nums, cls='') {
+        const container = document.getElementById(id);
+        container.innerHTML = nums.map(n => `<div class="ball ${cls}">${n}</div>`).join('');
+    }
 </script>
