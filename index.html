@@ -2,75 +2,81 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>MELATE MAESTRO | Dashboard Inteligente</title>
+    <title>MELATE MAESTRO | Inteligencia Total</title>
     <style>
-        body { background: #0f172a; color: #f8fafc; font-family: sans-serif; padding: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .card { background: #1e293b; padding: 20px; border-radius: 12px; border-top: 4px solid #d4af37; }
-        .score-card { border-top-color: #22c55e; background: #064e3b; }
-        .ball { 
-            display: inline-flex; width: 35px; height: 35px; background: #334155; 
-            border-radius: 50%; align-items: center; justify-content: center; 
-            margin: 5px; font-weight: bold; font-size: 0.9rem;
-        }
-        .active { background: #d4af37; color: #000; }
-        .score-ball { background: #22c55e; color: #fff; box-shadow: 0 0 10px #22c55e; }
-        h1 { text-align: center; color: #d4af37; text-transform: uppercase; letter-spacing: 2px; }
-        .tag { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; }
+        :root { --bg: #0f172a; --card: #1e293b; --gold: #d4af37; --green: #22c55e; }
+        body { background: var(--bg); color: #f8fafc; font-family: 'Segoe UI', sans-serif; padding: 20px; margin: 0; }
+        .dashboard { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .card { background: var(--card); padding: 20px; border-radius: 12px; border-left: 4px solid var(--gold); }
+        .full { grid-column: 1 / -1; }
+        .score-zone { border-color: var(--green); background: #064e3b; }
+        .ball { display: inline-flex; width: 38px; height: 38px; background: #334155; border-radius: 50%; align-items: center; justify-content: center; margin: 5px; font-weight: bold; }
+        .gold-ball { background: var(--gold); color: #000; }
+        .green-ball { background: var(--green); box-shadow: 0 0 10px var(--green); }
+        h1 { color: var(--gold); text-align: center; text-transform: uppercase; }
+        h2 { font-size: 1rem; color: #94a3b8; margin-top: 0; }
+        .pair-box { display: inline-block; background: #000; padding: 5px; border-radius: 20px; margin: 5px; }
     </style>
 </head>
 <body>
 
-    <h1>🛰️ Melate Maestro v1.0</h1>
-    <p style="text-align: center;">Centro de Inteligencia Estadística - Análisis de 10 Capas</p>
+    <h1>🛰️ MELATE MAESTRO: CONTROL TOTAL</h1>
 
-    <div class="grid">
-        <div class="card" style="grid-column: 1 / -1;">
-            <span class="tag">Situación Actual - Concurso <span id="conc"></span></span>
-            <div id="ultimo-row" style="margin-top:10px;"></div>
+    <div class="dashboard">
+        <div class="card full">
+            <h2>📡 ÚLTIMO SORTEO REGISTRADO</h2>
+            <div id="ultimo"></div>
         </div>
 
         <div class="card">
-            <h2>📊 Capa 1: Frecuencia</h2>
+            <h2>📊 CAPA 1: FRECUENCIA HISTÓRICA</h2>
             <div id="c1"></div>
-            <p class="tag">Números con mayor aparición histórica.</p>
         </div>
 
         <div class="card">
-            <h2>🔗 Capa 5: Efecto Pares</h2>
+            <h2>🔗 CAPA 2: PARES DE ALTA SINCRONÍA</h2>
+            <div id="c2"></div>
+        </div>
+
+        <div class="card">
+            <h2>🔫 CAPA 9: EFECTO GATILLO (1D)</h2>
+            <div id="c9"></div>
+        </div>
+
+        <div class="card">
+            <h2>⚡ CAPA 5: SECUENCIA DE PARES</h2>
             <div id="c5"></div>
-            <p class="tag">Proyección tras parejas del último sorteo.</p>
         </div>
 
-        <div class="card">
-            <h2>🧬 Capa 6: Efecto Tríos</h2>
-            <div id="c6"></div>
-            <p class="tag">Alta precisión basada en tríos históricos.</p>
-        </div>
-
-        <div class="card score-card" style="grid-column: 1 / -1;">
-            <h2>🏆 Capa 10: Score Maestro (Ranking Final)</h2>
+        <div class="card full score-zone">
+            <h2>🏆 CAPA 10: SCORE MAESTRO (PROYECCIÓN FINAL PONDERADA)</h2>
             <div id="c10"></div>
-            <p style="margin-top:10px;">Este es el vector final ponderando todas las relaciones estadísticas del sistema.</p>
         </div>
     </div>
 
     <script>
         window.onload = async () => {
-            const res = await fetch('/api/index');
-            const data = await res.json();
+            const r = await fetch('/api/index');
+            const d = await r.json();
 
-            document.getElementById('conc').innerText = data.ultimo.concurso;
-            render('ultimo-row', data.ultimo.numeros, 'active');
-            render('c1', data.capas.c1_frecuencia);
-            render('c5', data.capas.c5_efecto_pares);
-            render('c6', data.capas.c6_efecto_trios);
-            render('c10', data.capas.c10_score_maestro, 'score-ball');
+            render('ultimo', d.ultimo.numeros, 'gold-ball');
+            render('c1', d.capas.c1);
+            render('c5', d.capas.c5);
+            render('c9', d.capas.c9);
+            render('c10', d.capas.c10, 'green-ball');
+
+            // Render especial para pares (Capa 2)
+            const c2 = document.getElementById('c2');
+            c2.innerHTML = d.capas.c2.map(p => `
+                <div class="pair-box">
+                    <div class="ball gold-ball" style="width:30px; height:30px;">${p[0]}</div>
+                    <div class="ball gold-ball" style="width:30px; height:30px;">${p[1]}</div>
+                </div>
+            `).join('');
         };
 
         function render(id, nums, cls='') {
-            const cont = document.getElementById(id);
-            cont.innerHTML = nums.map(n => `<div class="ball ${cls}">${n}</div>`).join('');
+            document.getElementById(id).innerHTML = nums.map(n => `<div class="ball ${cls}">${n}</div>`).join('');
         }
     </script>
 </body>
