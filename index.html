@@ -3,140 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CONDOMINIO B - DASHBOARD</title>
+    <title>MELATE MAESTRO | Inteligencia Estadística</title>
     <style>
         :root {
-            --neon-green: #00ff41;
-            --gold: #ffcc00;
-            --bg-dark: #050505;
+            --primary-bg: #f4f7f9;
+            --card-bg: #ffffff;
+            --accent: #d4af37; /* Dorado Melate */
+            --text-main: #2c3e50;
+            --text-muted: #7f8c8d;
+            --border: #e1e8ed;
         }
 
         body {
-            background-color: #000;
-            color: var(--neon-green);
-            font-family: 'Courier New', Courier, monospace;
-            display: flex;
-            justify-content: center;
+            background-color: var(--primary-bg);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 20px;
+        }
+
+        .container { max-width: 1000px; margin: 0 auto; }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 10px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
             padding: 20px;
-            margin: 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
         }
 
-        .container {
-            width: 100%;
-            max-width: 700px;
-            border: 2px solid var(--neon-green);
-            padding: 25px;
-            background: var(--bg-dark);
-            box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
-        }
+        .full-width { grid-column: 1 / -1; }
 
-        h1 { text-align: center; font-size: 1.4rem; border-bottom: 1px solid var(--neon-green); padding-bottom: 10px; }
+        h2 { color: var(--accent); margin-top: 0; font-size: 1.1rem; text-transform: uppercase; }
 
-        .panel { margin-top: 20px; border: 1px dashed rgba(0, 255, 65, 0.4); padding: 15px; }
-        .panel-header { font-weight: bold; margin-bottom: 15px; color: #fff; text-transform: uppercase; }
-
-        .ball-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 15px 0; }
+        .ball-container { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
         .ball {
-            width: 45px; height: 45px; border: 2px solid var(--neon-green);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-weight: bold; font-size: 1.1rem;
+            width: 35px; height: 35px;
+            background: #eee; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 0.9rem;
         }
-        .ball.new { background: var(--neon-green); color: #000; box-shadow: 0 0 10px var(--neon-green); }
+        .ball.active { background: var(--accent); color: white; }
 
-        .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
-        .metric-box { background: rgba(255,255,255,0.05); padding: 10px; text-align: center; }
-        .metric-label { font-size: 0.7rem; display: block; opacity: 0.8; }
-        .metric-value { font-size: 1.2rem; font-weight: bold; color: #fff; }
-
-        .alert-zone {
-            margin-top: 20px; padding: 15px; text-align: center; font-weight: bold;
-            border: 2px solid #222; color: #222; transition: 0.5s;
-        }
-        .alert-zone.active {
-            border-color: var(--gold); color: var(--gold);
-            text-shadow: 0 0 5px var(--gold);
-            animation: pulse 1.5s infinite;
+        .stats-list { list-style: none; padding: 0; }
+        .stats-list li {
+            display: flex; justify-content: space-between;
+            padding: 8px 0; border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
         }
 
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-
-        .status-bar { font-size: 0.8rem; margin-top: 15px; color: #666; }
+        .status-tag {
+            font-size: 0.7rem; background: #e8f5e9; color: #2e7d32;
+            padding: 4px 8px; border-radius: 4px; font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🛰️ SISTEMA PREDICTIVO CONDOMINIO B</h1>
+    <header>
+        <h1>MELATE MAESTRO</h1>
+        <div class="status-tag">SISTEMA OPERATIVO // CAPA 1 ACTIVADA</div>
+    </header>
 
-    <div class="panel">
-        <div class="panel-header">📡 Último Sorteo (Concurso <span id="id_concurso">...</span>)</div>
-        <div id="row_ultimo" class="ball-row"></div>
-        <div class="status-bar">REGISTRO: <span id="fecha_ultimo">...</span></div>
-    </div>
-
-    <div class="panel" style="border-color: var(--gold);">
-        <div class="panel-header" style="color: var(--gold);">🎯 Vector de Resonancia Sugerido</div>
-        <div id="row_prediccion" class="ball-row"></div>
-        
-        <div class="metrics">
-            <div class="metric-box"><span class="metric-label">PARIDAD</span><span id="m_par" class="metric-value">--</span></div>
-            <div class="metric-box"><span class="metric-label">MEDIA</span><span id="m_prom" class="metric-value">--</span></div>
-            <div class="metric-box"><span class="metric-label">SUMA TOTAL</span><span id="m_suma" class="metric-value">--</span></div>
+    <div class="dashboard-grid">
+        <div class="card full-width">
+            <h2>📡 Último Registro en HIST (Concurso <span id="id-concurso">...</span>)</h2>
+            <div id="numeros-ultimo" class="ball-container"></div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 10px;">
+                Fecha: <span id="fecha-ultimo">...</span> | Día: <span id="dia-ultimo">...</span>
+            </p>
         </div>
 
-        <div id="alerta_dorada" class="alert-zone">ALERTA DORADA STANDBY</div>
-    </div>
+        <div class="card">
+            <h2>📊 Capa 1: Números de Alta Frecuencia</h2>
+            <div id="frecuencia-general" class="ball-container"></div>
+            <p style="font-size: 0.8rem; margin-top: 10px;">Top 7 números con más apariciones históricas.</p>
+        </div>
 
-    <div class="status-bar" style="text-align: center; margin-top: 20px;">
-        ESTADO: <span style="color:var(--neon-green)">OPERATIVO // SINCRONIZADO</span>
+        <div class="card">
+            <h2>📅 Tendencia por Día (<span id="nombre-dia">...</span>)</h2>
+            <div id="frecuencia-dia" class="ball-container"></div>
+            <p style="font-size: 0.8rem; margin-top: 10px;">Números que más salen en este día específico.</p>
+        </div>
     </div>
 </div>
 
 <script>
-    async function syncSystem() {
+    window.onload = async () => {
         try {
-            const res = await fetch('/api/index');
-            const data = await res.json();
+            const response = await fetch('/api/index');
+            const data = await response.json();
 
-            if(data.error) throw new Error(data.error);
+            // Llenar datos último sorteo
+            document.getElementById('id-concurso').innerText = data.ultimo.concurso;
+            document.getElementById('fecha-ultimo').innerText = data.ultimo.fecha;
+            document.getElementById('dia-ultimo').innerText = data.ultimo.dia;
+            renderBalls('numeros-ultimo', data.ultimo.numeros, true);
 
-            // Cargar datos del último sorteo
-            document.getElementById('id_concurso').innerText = data.concurso;
-            document.getElementById('fecha_ultimo').innerText = data.fecha;
-            renderBalls('row_ultimo', data.ultimo_sorteo, false);
+            // Llenar Frecuencias Generales
+            renderBalls('frecuencia-general', data.capa1.general);
 
-            // Cargar predicción
-            renderBalls('row_prediccion', data.prediccion, true);
+            // Llenar Frecuencias por Día
+            document.getElementById('nombre-dia').innerText = data.ultimo.dia;
+            renderBalls('frecuencia-dia', data.capa1.por_dia);
 
-            // Cargar métricas
-            document.getElementById('m_par').innerText = data.metricas.paridad;
-            document.getElementById('m_prom').innerText = data.metricas.promedio;
-            const suma = data.metricas.suma;
-            document.getElementById('m_suma').innerText = suma;
-
-            // Lógica Alerta Dorada
-            if(suma >= 130 && suma <= 210) {
-                const alerta = document.getElementById('alerta_dorada');
-                alerta.innerText = "⚠️ ALERTA DORADA: RESONANCIA ÓPTIMA";
-                alerta.classList.add('active');
-            }
-
-        } catch (err) {
-            console.error("Error de enlace:", err);
-            document.body.innerHTML = `<div style="color:red; text-align:center; padding:50px;">
-                FALLO DE TELEMETRÍA: ${err.message}<br>Revisa que index.py y datos.csv estén correctos.
-            </div>`;
+        } catch (e) {
+            console.error("Error cargando Melate Maestro:", e);
         }
-    }
+    };
 
-    function renderBalls(id, nums, isHot) {
+    function renderBalls(id, nums, active=false) {
         const container = document.getElementById(id);
-        container.innerHTML = nums.map(n => `
-            <div class="ball ${isHot ? 'new' : ''}">${n}</div>
-        `).join('');
+        container.innerHTML = nums.map(n => `<div class="ball ${active ? 'active' : ''}">${n}</div>`).join('');
     }
-
-    window.onload = syncSystem;
 </script>
 
 </body>
