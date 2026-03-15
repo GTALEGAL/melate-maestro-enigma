@@ -14,7 +14,7 @@ def get_conn():
         database="dreamdia_melate_db",
         port=3306,
         charset="utf8mb4",
-        connect_timeout=10,
+        connect_timeout=30,
         cursorclass=pymysql.cursors.DictCursor
     )
 
