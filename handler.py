@@ -227,3 +227,4 @@ class handler(BaseHTTPRequestHandler):
             respuesta = {"status":"ERROR","mensaje":str(e),"detalle":traceback.format_exc()}
 
         self.wfile.write(json.dumps(respuesta, ensure_ascii=False).encode())
+
